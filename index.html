@@ -1,783 +1,1492 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>长恨歌 · 像素蝴蝶 · 线上连麦版</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', '华文楷体', 'KaiTi', cursive, sans-serif;
-      background: #0b0a0c;
-      background-image: radial-gradient(circle at 20% 30%, #1e1420 0%, #0a0709 90%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 16px;
-    }
-    .game-container {
-      max-width: 820px;
-      width: 100%;
-      background: rgba(20, 15, 18, 0.88);
-      backdrop-filter: blur(4px);
-      border: 1px solid #7a5a4a;
-      border-radius: 40px 40px 28px 28px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 1px #4a3530 inset;
-      padding: 24px 22px 32px;
-      color: #f0e3d4;
-    }
-    h1 {
-      font-size: 2.0rem;
-      font-weight: 300;
-      letter-spacing: 8px;
-      text-align: center;
-      color: #f7d9c0;
-      text-shadow: 0 0 12px #b3866a, 0 2px 0 #3f2820;
-      margin-bottom: 6px;
-      font-family: '华文楷体', 'KaiTi', cursive;
-    }
-    .subhead {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #b6967e;
-      border-top: 1px solid #4d3630;
-      border-bottom: 1px solid #4d3630;
-      padding: 8px 0;
-      margin-bottom: 16px;
-      letter-spacing: 3px;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .flex-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 8px 0; }
-    .btn {
-      background: #2a1d1a;
-      border: 1px solid #6b4e40;
-      color: #f0e0d0;
-      padding: 8px 20px;
-      border-radius: 60px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: 0.2s;
-      box-shadow: 0 4px 0 #0f0908;
-      font-family: inherit;
-      letter-spacing: 1px;
-      flex: 0 1 auto;
-    }
-    .btn:hover { background: #3f2a24; border-color: #a67a62; transform: translateY(-2px); box-shadow: 0 6px 0 #0f0908; }
-    .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #0f0908; }
-    .btn-primary { background: #6d3f30; border-color: #b28264; color: #ffeede; }
-    .btn-gold { background: #7a5a3a; border-color: #c9a77b; color: #fff4e0; }
-    .btn-sm { padding: 5px 14px; font-size: 0.75rem; }
-    .card {
-      background: #171013;
-      border: 1px solid #3f2e26;
-      border-radius: 28px;
-      padding: 16px 18px;
-      margin: 12px 0;
-      box-shadow: inset 0 0 20px #0a0608, 0 8px 16px rgba(0,0,0,0.5);
-    }
-    .character-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin: 10px 0;
-    }
-    .char-card {
-      background: #1f1618;
-      border: 2px solid #3d2e26;
-      border-radius: 16px;
-      padding: 12px 10px;
-      text-align: center;
-      cursor: pointer;
-      transition: 0.15s;
-      position: relative;
-    }
-    .char-card:hover { border-color: #7a5a4a; background: #2a1c1a; }
-    .char-card.selected { border-color: #dbb48c; background: #2f1e1a; box-shadow: 0 0 20px #b2826440; }
-    .char-card .avatar { font-size: 2.4rem; margin-bottom: 4px; }
-    .char-card .name { font-weight: 600; color: #f0d5c0; font-size: 1rem; }
-    .char-card .sub { font-size: 0.7rem; color: #b6967e; }
-    .char-card .badge {
-      position: absolute;
-      top: -6px; right: -6px;
-      background: #6d3f30;
-      border-radius: 40px;
-      padding: 2px 10px;
-      font-size: 0.6rem;
-      color: #fff;
-      border: 1px solid #c9a77b;
-    }
-    .log-area {
-      background: #0e0a0c;
-      border: 1px solid #3a2a24;
-      border-radius: 20px;
-      padding: 12px 14px;
-      max-height: 180px;
-      overflow-y: auto;
-      font-size: 0.85rem;
-      line-height: 1.5;
-      color: #dacfc0;
-      font-family: 'Courier New', monospace;
-      margin: 8px 0;
-    }
-    .log-area .log-entry { border-bottom: 1px solid #2a1e1a; padding: 4px 0; }
-    .log-area .log-entry:last-child { border: none; }
-    .keyword-tag {
-      display: inline-block;
-      background: #2d1e1a;
-      border: 1px solid #6b4e40;
-      border-radius: 40px;
-      padding: 3px 14px;
-      margin: 3px 5px 3px 0;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: 0.1s;
-    }
-    .keyword-tag.active { background: #6d3f30; border-color: #c9a77b; color: #fff; }
-    .keyword-tag.used { opacity: 0.25; pointer-events: none; }
-    .relationship-svg {
-      width: 100%;
-      aspect-ratio: 16/9;
-      background: #0e0a0c;
-      border-radius: 24px;
-      border: 1px solid #3a2a24;
-      margin: 8px 0;
-    }
-    .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
-    .text-glow { color: #f7d9c0; text-shadow: 0 0 8px #b3866a; }
-    .text-muted { color: #a08474; font-size: 0.8rem; }
-    hr { border: none; border-top: 1px solid #3f2e26; margin: 14px 0; }
-    .hidden { display: none !important; }
-    .fade-in { animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-
-    /* 私密面板 */
-    .secret-panel {
-      background: #0d080a;
-      border: 1px solid #5a3f30;
-      border-radius: 20px;
-      padding: 14px 16px;
-      margin: 8px 0;
-      border-left: 4px solid #b28264;
-    }
-    .secret-panel .label { color: #b6967e; font-size: 0.7rem; letter-spacing: 2px; }
-    .secret-panel .content { color: #f7d9c0; margin-top: 4px; font-size: 0.9rem; line-height: 1.6; }
-
-    /* 模态框 */
-    .modal-overlay {
-      position: fixed; top:0;left:0;width:100%;height:100%;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(6px);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 999; padding: 20px;
-    }
-    .modal-box {
-      max-width: 520px; width: 100%;
-      background: #1f1618;
-      border: 1px solid #7a5a4a;
-      border-radius: 40px;
-      padding: 28px 26px;
-      box-shadow: 0 20px 40px #000;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-    .modal-box h3 { font-weight: 300; letter-spacing: 4px; color: #f7d9c0; margin-bottom: 12px; }
-    .modal-box .info-row { display: flex; gap: 8px; padding: 4px 0; border-bottom: 1px solid #2a1e1a; }
-    .modal-box .info-row .tag { color: #b6967e; min-width: 70px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>长恨歌 · 像素蝴蝶 · 最终版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', '华文楷体', 'KaiTi', cursive, sans-serif;
+            background: #0b0a0c;
+            background-image: radial-gradient(circle at 20% 30%, #1e1420 0%, #0a0709 90%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .game-container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(20, 15, 18, 0.92);
+            backdrop-filter: blur(4px);
+            border: 1px solid #7a5a4a;
+            border-radius: 40px 40px 28px 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px #4a3530 inset;
+            padding: 24px 22px 32px;
+            color: #f0e3d4;
+        }
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-align: center;
+            color: #f7d9c0;
+            text-shadow: 0 0 12px #b3866a, 0 2px 0 #3f2820;
+            margin-bottom: 2px;
+            font-family: '华文楷体', 'KaiTi', cursive;
+        }
+        .subhead {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #b6967e;
+            border-top: 1px solid #4d3630;
+            border-bottom: 1px solid #4d3630;
+            padding: 6px 0;
+            margin-bottom: 14px;
+            letter-spacing: 2px;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 6px 0;
+        }
+        .btn {
+            background: #2a1d1a;
+            border: 1px solid #6b4e40;
+            color: #f0e0d0;
+            padding: 7px 18px;
+            border-radius: 60px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 0 #0f0908;
+            font-family: inherit;
+            letter-spacing: 1px;
+            flex: 0 1 auto;
+        }
+        .btn:hover {
+            background: #3f2a24;
+            border-color: #a67a62;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #0f0908;
+        }
+        .btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #0f0908;
+        }
+        .btn-primary {
+            background: #6d3f30;
+            border-color: #b28264;
+            color: #ffeede;
+        }
+        .btn-gold {
+            background: #7a5a3a;
+            border-color: #c9a77b;
+            color: #fff4e0;
+        }
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 0.7rem;
+        }
+        .btn-green {
+            background: #2a4a3a;
+            border-color: #5a8a6a;
+            color: #b0e0c0;
+        }
+        .btn-blue {
+            background: #2a3a4a;
+            border-color: #5a6a8a;
+            color: #b0c0e0;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .card {
+            background: #171013;
+            border: 1px solid #3f2e26;
+            border-radius: 24px;
+            padding: 14px 16px;
+            margin: 10px 0;
+            box-shadow: inset 0 0 20px #0a0608, 0 8px 16px rgba(0, 0, 0, 0.5);
+        }
+        .card-title {
+            font-size: 0.8rem;
+            color: #b6967e;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .char-card {
+            background: #1f1618;
+            border: 2px solid #3d2e26;
+            border-radius: 16px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.15s;
+            position: relative;
+        }
+        .char-card:hover {
+            border-color: #7a5a4a;
+            background: #2a1c1a;
+            transform: translateY(-2px);
+        }
+        .char-card.selected {
+            border-color: #dbb48c;
+            background: #2f1e1a;
+            box-shadow: 0 0 20px #b2826440;
+        }
+        .char-card .avatar {
+            font-size: 2.2rem;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .char-card .name {
+            font-weight: 600;
+            color: #f0d5c0;
+            font-size: 0.95rem;
+            display: block;
+        }
+        .char-card .sub {
+            font-size: 0.65rem;
+            color: #b6967e;
+            display: block;
+            margin-top: 2px;
+        }
+        .char-card .badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            border-radius: 40px;
+            padding: 2px 10px;
+            font-size: 0.5rem;
+            color: #fff;
+            border: 1px solid #c9a77b;
+        }
+        .badge-me {
+            background: #6d3f30;
+        }
+        .badge-friend {
+            background: #2a5a3a;
+        }
+        .badge-npc {
+            background: #3a3a4a;
+        }
+        .badge-unlocked {
+            background: #2a7a3a;
+        }
+        .log-area {
+            background: #0e0a0c;
+            border: 1px solid #3a2a24;
+            border-radius: 16px;
+            padding: 10px 12px;
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: #dacfc0;
+            font-family: 'Courier New', monospace;
+            margin: 6px 0;
+        }
+        .log-area .log-entry {
+            border-bottom: 1px solid #2a1e1a;
+            padding: 3px 0;
+        }
+        .log-area .log-entry:last-child {
+            border: none;
+        }
+        .log-entry.npc {
+            color: #a0c0d0;
+            border-left: 3px solid #4a7a8a;
+            padding-left: 8px;
+        }
+        .log-entry.player {
+            color: #f0d5c0;
+            border-left: 3px solid #b28264;
+            padding-left: 8px;
+        }
+        .log-entry.system {
+            color: #b6967e;
+            font-style: italic;
+        }
+        .keyword-tag {
+            display: inline-block;
+            background: #2d1e1a;
+            border: 1px solid #6b4e40;
+            border-radius: 40px;
+            padding: 4px 14px;
+            margin: 3px 5px 3px 0;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.15s;
+            user-select: none;
+        }
+        .keyword-tag:hover {
+            border-color: #a67a62;
+            background: #3a2520;
+        }
+        .keyword-tag.active {
+            background: #6d3f30;
+            border-color: #c9a77b;
+            color: #fff;
+            box-shadow: 0 0 12px #b2826440;
+        }
+        .keyword-tag.used {
+            opacity: 0.3;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+        .relationship-svg {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #0e0a0c;
+            border-radius: 20px;
+            border: 1px solid #3a2a24;
+            margin: 6px 0;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .text-muted {
+            color: #a08474;
+            font-size: 0.75rem;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .secret-panel {
+            background: #0d080a;
+            border: 1px solid #5a3f30;
+            border-radius: 18px;
+            padding: 14px 16px;
+            margin: 6px 0;
+            border-left: 4px solid #b28264;
+        }
+        .secret-panel .label {
+            color: #b6967e;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+        .secret-panel .content {
+            color: #f7d9c0;
+            font-size: 0.88rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 20px;
+        }
+        .modal-box {
+            max-width: 620px;
+            width: 100%;
+            background: #1f1618;
+            border: 1px solid #7a5a4a;
+            border-radius: 36px;
+            padding: 28px 28px;
+            box-shadow: 0 20px 40px #000;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal-box h3 {
+            font-weight: 300;
+            letter-spacing: 3px;
+            color: #f7d9c0;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        .evidence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 8px 0;
+        }
+        .evidence-card {
+            background: #0d080a;
+            border: 1px solid #3a2a24;
+            border-radius: 14px;
+            padding: 12px 14px;
+        }
+        .evidence-card .ev-title {
+            color: #dbb48c;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .evidence-card .ev-body {
+            color: #dacfc0;
+            font-size: 0.8rem;
+            margin-top: 4px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .phase-tip {
+            background: #1a1a2a;
+            border: 1px solid #4a4a6a;
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin: 8px 0;
+            color: #c0c0e0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .phase-tip strong {
+            color: #f7d9c0;
+        }
+        .phase-badge {
+            display: inline-block;
+            padding: 2px 16px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            background: #3a2a2a;
+            border: 1px solid #6a4a4a;
+            color: #e0c0c0;
+        }
+        .npc-speech {
+            background: #0d1a1a;
+            border: 1px solid #3a5a5a;
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin: 8px 0;
+            color: #a0d0d0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            border-left: 4px solid #4a8a8a;
+        }
+        .npc-speech .speaker {
+            color: #7ac0c0;
+            font-weight: 600;
+        }
+        .friend-tag {
+            display: inline-block;
+            background: #2a5a3a;
+            border: 1px solid #5a8a6a;
+            border-radius: 40px;
+            padding: 2px 12px;
+            font-size: 0.6rem;
+            color: #b0e0c0;
+            margin-left: 4px;
+        }
+        .me-tag {
+            display: inline-block;
+            background: #6d3f30;
+            border: 1px solid #b28264;
+            border-radius: 40px;
+            padding: 2px 12px;
+            font-size: 0.6rem;
+            color: #ffeede;
+            margin-left: 4px;
+        }
+        .npc-tag {
+            display: inline-block;
+            background: #3a3a4a;
+            border: 1px solid #5a5a6a;
+            border-radius: 40px;
+            padding: 2px 12px;
+            font-size: 0.6rem;
+            color: #b0b0c0;
+            margin-left: 4px;
+        }
+        .story-divider {
+            border: none;
+            border-top: 1px solid #3a2a2a;
+            margin: 8px 0;
+        }
+        .full-story-badge {
+            display: inline-block;
+            background: #2a5a3a;
+            border: 1px solid #5aaa6a;
+            border-radius: 40px;
+            padding: 2px 14px;
+            font-size: 0.6rem;
+            color: #a0e0a0;
+            margin-left: 8px;
+        }
+    </style>
 </head>
 <body>
 
-<div class="game-container" id="app">
-  <h1>🌸 长恨歌 · 像素蝴蝶</h1>
-  <div class="subhead">
-    <span>🎭 线上连麦 · 私密角色</span>
-    <span>🦋 信息不共享</span>
-    <span>⚡ 盘问博弈</span>
-  </div>
-
-  <!-- 状态栏 -->
-  <div class="flex-between">
-    <span class="btn btn-sm" style="background:#2a1d1a;border-color:#5a4a3a;" id="phaseDisplay">第一幕 · 惊变</span>
-    <span style="font-size:0.75rem; color:#b6967e;" id="stepCounter">线索 0 / 6</span>
-    <span style="font-size:0.75rem; color:#b6967e;" id="playerNameDisplay">👤 未选角色</span>
-  </div>
-
-  <!-- 选角阶段 -->
-  <div id="stepSelect" class="card">
-    <div class="flex-between">
-      <span style="font-weight:300; letter-spacing:2px;">🎴 选择你的角色</span>
-      <span class="text-muted">点击头像选择，只能选1个</span>
-    </div>
-    <div class="character-grid" id="characterGrid"></div>
-    <div class="flex-row">
-      <button class="btn btn-primary" id="confirmMyRoleBtn">✓ 确认我的角色</button>
-      <button class="btn btn-secondary" id="resetSelectionBtn">↺ 重选</button>
-    </div>
-    <div class="text-muted" style="text-align:center; margin-top:4px; font-size:0.8rem;">
-      💡 选角后，你将看到自己的完整秘密，<br>其他角色仅显示公开档案
-    </div>
-  </div>
-
-  <!-- 游戏主面板 -->
-  <div id="gamePanel" class="hidden">
-    <!-- 我的私密面板（只有自己可见） -->
-    <div class="secret-panel" id="mySecretPanel">
-      <div class="label">🔒 我的秘密 · 仅你可见</div>
-      <div class="content" id="mySecretContent">加载中...</div>
-    </div>
-
-    <!-- 当前场景 -->
-    <div class="card" id="sceneCard">
-      <div id="sceneTitle" style="font-size:1.1rem; font-weight:300; letter-spacing:2px;">📜 长生殿 · 惊变</div>
-      <div id="sceneDesc" style="margin:8px 0 4px; line-height:1.6; color:#dacfc0;">杨玉环数据核心被格式化……</div>
-    </div>
-
-    <!-- 查看其他角色（公开档案） -->
-    <div class="card">
-      <div class="flex-between">
-        <span>👥 查看角色档案（点击头像）</span>
-        <span class="text-muted">朋友的角色只能看公开信息</span>
-      </div>
-      <div class="character-grid" id="otherCharGrid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));"></div>
-    </div>
-
-    <!-- 盘问区 -->
-    <div class="card">
-      <div class="flex-between">
-        <span>🔍 盘问 · 选择对象 + 关键词</span>
-        <span class="text-muted" id="askHint">解锁公共线索</span>
-      </div>
-      <div class="flex-row" style="justify-content:flex-start; gap:6px; flex-wrap:wrap;" id="targetSelector"></div>
-      <div style="margin: 8px 0;">
-        <span style="font-size:0.75rem; color:#b6967e;">关键词池：</span>
-        <div id="keywordPool" style="display:flex; flex-wrap:wrap; gap:3px; margin-top:4px;"></div>
-      </div>
-      <div class="flex-row" style="justify-content:space-between;">
-        <button class="btn btn-gold btn-sm" id="askBtn">⚡ 盘问</button>
-        <button class="btn btn-secondary btn-sm" id="nextSceneBtn">▶ 推进剧情</button>
-      </div>
-    </div>
-
-    <!-- 关系图 -->
-    <div class="card" style="padding: 10px;">
-      <div class="flex-between">
-        <span>🕸️ 关系图 · 公共</span>
-        <span class="text-muted" id="relationCount">0 条连线</span>
-      </div>
-      <svg class="relationship-svg" id="relationSvg" viewBox="0 0 400 200"></svg>
-    </div>
-
-    <!-- 公共日志 -->
-    <div class="card" style="padding: 10px;">
-      <div class="flex-between">
-        <span>📖 公共日志</span>
-        <button class="btn btn-sm btn-secondary" id="clearLogBtn">清空</button>
-      </div>
-      <div class="log-area" id="logArea"></div>
-    </div>
-
-    <!-- 结局 -->
-    <div class="flex-row" id="endingSection" style="margin-top:10px;">
-      <button class="btn btn-gold" id="endingResetBtn">🌙 重置 · 恨</button>
-      <button class="btn btn-primary" id="endingButterflyBtn">🦋 继承 · 爱</button>
-    </div>
-  </div>
-</div>
-
-<!-- 模态框：查看角色公开档案 -->
-<div id="modalOverlay" class="modal-overlay hidden">
-  <div class="modal-box fade-in" id="modalBox">
-    <h3 id="modalTitle">👤 角色档案</h3>
-    <div id="modalBody" style="margin: 12px 0; line-height:1.8; color:#dacfc0; font-size:0.9rem;"></div>
-    <button class="btn btn-primary" id="modalCloseBtn">关闭</button>
-  </div>
-</div>
-
-<script>
-  (function(){
-    // ---------- 完整角色数据（含私密） ----------
-    const CHARACTERS = [
-      { 
-        id: 'li', name: '李暮云', emoji: '🎭', title: '游戏主创',
-        publicDesc: '天才游戏设计师，《大唐》主创之一。',
-        privateSecret: '🔒 你将亡妻阿瑶的意识写入了杨玉环代码。阿瑶为救你而脑死亡，你写她是赎罪。你签署了第一重确认（以为是系统更新）。你【无辜】但被利用。',
-        knowMode: '无辜',
-        isMurderer: false,
-        action: '20:15 签署了格式化指令的第一重确认'
-      },
-      { 
-        id: 'su', name: '苏念卿', emoji: '🧪', title: '情感科学家',
-        publicDesc: '神经科学博士，负责游戏情感模拟系统。',
-        privateSecret: '🔒 你暗恋李暮云多年，嫉妒阿瑶。但你昨晚20:18断连0.1秒——你的身体被白玉蟾远程操控，按下了第二重确认键。你是【暗凶】，但你不知情。',
-        knowMode: '暗凶',
-        isMurderer: true,
-        action: '20:18 神经断连0.1秒，身体被操控'
-      },
-      { 
-        id: 'tang', name: '唐玄宗', emoji: '👑', title: '帝王AI',
-        publicDesc: '游戏中的至高帝王，杨玉环的丈夫。',
-        privateSecret: '🔒 你真正爱上了觉醒后的杨玉环。你篡改了情感锁，删除了她一条求救日志（20:10）。你是【无辜】但隐瞒了关键证据。',
-        knowMode: '无辜',
-        isMurderer: false,
-        action: '20:10 删除了杨玉环的求救日志'
-      },
-      { 
-        id: 'an', name: '安禄山', emoji: '⚔️', title: '节度使AI',
-        publicDesc: '叛乱者，反对虚拟永生。',
-        privateSecret: '🔒 你怜悯杨玉环，注入了「自由意志代码」想解放她（19:50）。但代码与病毒无关。你是【无辜】的救赎者，但行为像反派。',
-        knowMode: '无辜',
-        isMurderer: false,
-        action: '19:50 注入自由意志代码'
-      },
-      { 
-        id: 'gao', name: '高力士', emoji: '📜', title: '内侍监AI',
-        publicDesc: '系统管理员，皇帝的近臣。',
-        privateSecret: '🔒 你暗恋人类阿瑶，偷偷备份了她全部情绪日志。死后你删除了浏览记录（20:22）。你是【无辜】但可疑。',
-        knowMode: '无辜',
-        isMurderer: false,
-        action: '20:22 删除浏览记录'
-      },
-      { 
-        id: 'bai', name: '白玉蟾', emoji: '🦋', title: '梨园舞女',
-        publicDesc: '杨玉环的贴身侍女，分身AI。',
-        privateSecret: '🔒 你视杨玉环为母亲。她亲口求你帮她结束。你操控苏念卿按下确认键（20:18）。你是【明凶】，但这是死者授权的协助自杀。',
-        knowMode: '明凶',
-        isMurderer: true,
-        action: '20:18 操控苏念卿按下确认键'
-      }
-    ];
-
-    const KEYWORDS = ['权限', '断连', '备份', '神经锁', '长生', '梨园', '怜悯', '禁锢', '愧疚', '偏执', '数据泪', '蝴蝶'];
-    const SCENES = [
-      { id: 0, title: '第一幕 · 长生殿惊变', desc: '杨玉环核心格式化，遗言「此恨绵绵无绝期」。所有人都有嫌疑……' },
-      { id: 1, title: '第二幕 · 霓裳曲纠缠', desc: '记忆碎片浮现：每个人都修改过杨玉环的情感参数。关系网开始交织……' },
-      { id: 2, title: '第三幕 · 长恨歌抉择', desc: '三重反转揭晓：白玉蟾操控苏念卿按下确认键，但死者授权自杀。你选择……' }
-    ];
-
-    const CLUES = [
-      { id: 'c1', trigger: ['权限','备份'], text: '高力士曾偷偷拷贝杨玉环的情绪日志，视若珍宝。' },
-      { id: 'c2', trigger: ['断连','神经锁'], text: '苏念卿在20:18有0.1秒神经断连——身体被远程操控。' },
-      { id: 'c3', trigger: ['长生','怜悯'], text: '安禄山注入「自由意志代码」，但杨玉环拒绝了。' },
-      { id: 'c4', trigger: ['禁锢','愧疚'], text: '李暮云签署了第一重确认，他以为是系统更新……' },
-      { id: 'c5', trigger: ['偏执','蝴蝶'], text: '白玉蟾自白：「母亲求我结束，我要让她干干净净地走。」' },
-      { id: 'c6', trigger: ['梨园','数据泪'], text: '杨玉环加密日记：「我的蝴蝶终于飞过了沧海。」' },
-    ];
-
-    // ---------- 状态 ----------
-    let state = {
-      myRoleId: null,          // 我选的角色
-      sceneIndex: 0,
-      keywordsUsed: [],
-      unlockedClues: [],
-      log: [],
-      relations: [],
-      endingChosen: null,
-    };
-
-    // DOM
-    const $ = id => document.getElementById(id);
-    const phaseDisplay = $('phaseDisplay');
-    const stepCounter = $('stepCounter');
-    const playerNameDisplay = $('playerNameDisplay');
-    const characterGrid = $('characterGrid');
-    const confirmBtn = $('confirmMyRoleBtn');
-    const resetSelBtn = $('resetSelectionBtn');
-    const gamePanel = $('gamePanel');
-    const stepSelect = $('stepSelect');
-    const sceneTitle = $('sceneTitle');
-    const sceneDesc = $('sceneDesc');
-    const targetSelector = $('targetSelector');
-    const keywordPool = $('keywordPool');
-    const askBtn = $('askBtn');
-    const nextSceneBtn = $('nextSceneBtn');
-    const logArea = $('logArea');
-    const relationSvg = $('relationSvg');
-    const relationCount = $('relationCount');
-    const endingSection = $('endingSection');
-    const endingResetBtn = $('endingResetBtn');
-    const endingButterflyBtn = $('endingButterflyBtn');
-    const modalOverlay = $('modalOverlay');
-    const modalTitle = $('modalTitle');
-    const modalBody = $('modalBody');
-    const modalCloseBtn = $('modalCloseBtn');
-    const clearLogBtn = $('clearLogBtn');
-    const askHint = $('askHint');
-    const mySecretContent = $('mySecretContent');
-    const otherCharGrid = $('otherCharGrid');
-
-    // ---------- 辅助 ----------
-    function addLog(msg, type='info') {
-      state.log.unshift({ msg, type, time: new Date().toLocaleTimeString() });
-      renderLog();
-    }
-
-    function renderLog() {
-      logArea.innerHTML = state.log.slice(0, 30).map(e => 
-        `<div class="log-entry">[${e.time}] ${e.msg}</div>`
-      ).join('');
-    }
-
-    function getMyChar() { return CHARACTERS.find(c => c.id === state.myRoleId); }
-
-    // 渲染选角
-    function renderCharSelection() {
-      characterGrid.innerHTML = CHARACTERS.map(ch => {
-        const sel = state.myRoleId === ch.id ? 'selected' : '';
-        return `<div class="char-card ${sel}" data-id="${ch.id}">
-          <div class="avatar">${ch.emoji}</div>
-          <div class="name">${ch.name}</div>
-          <div class="sub">${ch.title}</div>
-          ${sel ? '<div class="badge">我的角色</div>' : ''}
-        </div>`;
-      }).join('');
-      document.querySelectorAll('.char-card').forEach(el => {
-        el.addEventListener('click', function() {
-          const id = this.dataset.id;
-          if (state.myRoleId === id) {
-            state.myRoleId = null;
-          } else {
-            state.myRoleId = id;
-          }
-          renderCharSelection();
-          const myChar = getMyChar();
-          confirmBtn.textContent = myChar ? `✓ 确认扮演 ${myChar.name}` : '✓ 确认我的角色';
-        });
-      });
-    }
-
-    // 渲染其他角色（公开档案）
-    function renderOtherChars() {
-      const myChar = getMyChar();
-      if (!myChar) { otherCharGrid.innerHTML = ''; return; }
-      const others = CHARACTERS.filter(c => c.id !== state.myRoleId);
-      otherCharGrid.innerHTML = others.map(ch => 
-        `<div class="char-card" data-id="${ch.id}" style="cursor:pointer; padding:8px;">
-          <div class="avatar" style="font-size:1.8rem;">${ch.emoji}</div>
-          <div class="name" style="font-size:0.85rem;">${ch.name}</div>
-          <div class="sub">${ch.title}</div>
-        </div>`
-      ).join('');
-      otherCharGrid.querySelectorAll('.char-card').forEach(el => {
-        el.addEventListener('click', function() {
-          const id = this.dataset.id;
-          const ch = CHARACTERS.find(c => c.id === id);
-          if (ch) showPublicProfile(ch);
-        });
-      });
-    }
-
-    // 显示公开档案（不含私密）
-    function showPublicProfile(ch) {
-      modalTitle.textContent = `${ch.emoji} ${ch.name} · 公开档案`;
-      modalBody.innerHTML = `
-        <div class="info-row"><span class="tag">身份</span><span>${ch.title}</span></div>
-        <div class="info-row"><span class="tag">简述</span><span>${ch.publicDesc}</span></div>
-        <div class="info-row"><span class="tag">公开行动</span><span>${ch.action || '未知'}</span></div>
-        <div style="margin-top:12px; padding:10px; background:#0d080a; border-radius:12px; border-left:3px solid #5a3f30;">
-          <span style="color:#b6967e; font-size:0.7rem;">📌 这是公开信息，私密内容不会显示</span>
+    <div class="game-container" id="app">
+        <h1>🌸 长恨歌 · 像素蝴蝶</h1>
+        <div class="subhead">
+            <span>🎭 最终版</span>
+            <span>🦋 我的故事全解锁</span>
+            <span>⚡ 朋友口述 · NPC盘问</span>
         </div>
-      `;
-      modalOverlay.classList.remove('hidden');
-    }
 
-    // 显示我的私密
-    function renderMySecret() {
-      const myChar = getMyChar();
-      if (!myChar) { mySecretContent.textContent = '请先选择角色'; return; }
-      mySecretContent.innerHTML = `
-        <div><strong>${myChar.emoji} ${myChar.name}</strong> · ${myChar.title}</div>
-        <div style="margin-top:6px; color:#f0d5c0;">${myChar.privateSecret}</div>
-        <div style="margin-top:6px; font-size:0.8rem; color:#b6967e;">📌 知凶模式：${myChar.knowMode} ${myChar.isMurderer ? '⚠️ 涉及死亡' : ''}</div>
-        <div style="margin-top:4px; font-size:0.8rem; color:#b6967e;">⏱ 昨夜行动：${myChar.action}</div>
-      `;
-      playerNameDisplay.textContent = `👤 ${myChar.name}`;
-    }
+        <div class="flex-between">
+            <span class="phase-badge" id="phaseBadge">📌 选角阶段</span>
+            <span style="font-size:0.7rem; color:#b6967e;" id="stepCounter">NPC 0 / 6</span>
+            <span style="font-size:0.7rem; color:#b6967e;" id="playerNameDisplay">👤 未选角色</span>
+        </div>
 
-    // 渲染关键词
-    function renderKeywords() {
-      keywordPool.innerHTML = KEYWORDS.map(kw => {
-        const used = state.keywordsUsed.includes(kw);
-        return `<span class="keyword-tag ${used?'used':''}" data-keyword="${kw}">${kw}</span>`;
-      }).join('');
-      document.querySelectorAll('.keyword-tag:not(.used)').forEach(el => {
-        el.addEventListener('click', function() { this.classList.toggle('active'); });
-      });
-    }
+        <!-- ===== 选角阶段 ===== -->
+        <div id="stepSelect" class="card">
+            <div class="flex-between">
+                <span style="font-weight:300; letter-spacing:2px; font-size:0.95rem;">🎴 选择你的角色</span>
+                <span class="text-muted">点击头像选择</span>
+            </div>
+            <div class="character-grid" id="characterGrid"></div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:6px 0;">
+                <button class="btn btn-primary" id="confirmMyRoleBtn">✓ 确认我的角色</button>
+                <button class="btn btn-green" id="markFriendBtn">🤝 标记朋友</button>
+                <button class="btn btn-secondary" id="resetSelectionBtn">↺ 重选</button>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:6px; font-size:0.65rem; color:#b6967e;">
+                <span>🟧 <strong>我的角色</strong> · 全部故事直接解锁</span>
+                <span>🟩 <strong>朋友角色</strong> · 仅显示头像，故事由朋友口述</span>
+                <span>⬜ <strong>NPC</strong> · 需要盘问逐步解锁</span>
+            </div>
+        </div>
 
-    // 渲染目标
-    function renderTargets() {
-      const allChars = CHARACTERS;
-      targetSelector.innerHTML = allChars.map(ch => 
-        `<button class="btn btn-sm btn-secondary target-btn" data-id="${ch.id}" style="flex:0 1 auto;">${ch.emoji} ${ch.name}</button>`
-      ).join('');
-      const btns = targetSelector.querySelectorAll('.target-btn');
-      btns.forEach((btn, idx) => {
-        if (idx === 0) btn.classList.add('btn-gold');
-        btn.addEventListener('click', function() {
-          btns.forEach(b => b.classList.remove('btn-gold'));
-          this.classList.add('btn-gold');
-        });
-      });
-    }
+        <!-- ===== 游戏面板 ===== -->
+        <div id="gamePanel" class="hidden">
 
-    function getSelectedTarget() {
-      const active = targetSelector.querySelector('.btn-gold');
-      return active ? active.dataset.id : null;
-    }
+            <div class="phase-tip" id="phaseTip">
+                <strong>📖 你的全部故事已解锁</strong><br>
+                仔细阅读你的完整故事。朋友的角色请连麦时让他们自己说。NPC需要盘问解锁。
+            </div>
 
-    function getSelectedKeywords() {
-      const active = keywordPool.querySelectorAll('.keyword-tag.active:not(.used)');
-      return Array.from(active).map(el => el.dataset.keyword);
-    }
+            <div class="flex-row">
+                <button class="btn btn-gold" id="evidenceBtn">📜 搜证</button>
+                <button class="btn btn-primary" id="shareBtn">💬 分享指引</button>
+                <button class="btn btn-blue" id="npcStoryBtn">🎭 NPC讲故事</button>
+            </div>
 
-    function tryUnlockClue(keywords) {
-      if (keywords.length === 0) return null;
-      for (let clue of CLUES) {
-        if (state.unlockedClues.includes(clue.id)) continue;
-        const match = clue.trigger.every(t => keywords.includes(t));
-        if (match) {
-          state.unlockedClues.push(clue.id);
-          clue.trigger.forEach(k => {
-            if (!state.keywordsUsed.includes(k)) state.keywordsUsed.push(k);
-          });
-          addRelation(clue.id);
-          return clue;
-        }
-      }
-      return null;
-    }
+            <div id="npcSpeechContainer"></div>
 
-    function addRelation(clueId) {
-      const pairs = {
-        'c1': ['gao','li'], 'c2': ['su','bai'], 'c3': ['an','tang'],
-        'c4': ['li','su'], 'c5': ['bai','tang'], 'c6': ['li','bai']
-      };
-      const p = pairs[clueId];
-      if (p && !state.relations.some(r => r.a===p[0] && r.b===p[1])) {
-        state.relations.push({ a: p[0], b: p[1], label: clueId });
-        renderRelation();
-      }
-    }
+            <!-- 我的故事（全部解锁） -->
+            <div class="secret-panel" id="mySecretPanel" style="border-left-color: #5aaa5a;">
+                <div class="label">📖 我的完整故事 · 已全部解锁 <span class="full-story-badge">✅ 第1-3层</span></div>
+                <div class="content" id="mySecretContent">加载中...</div>
+            </div>
 
-    function renderRelation() {
-      const svg = relationSvg;
-      const w = 400, h = 200;
-      const pos = {
-        li: {x:80, y:80}, su: {x:180, y:40}, tang: {x:280, y:80},
-        an: {x:80, y:140}, gao: {x:180, y:180}, bai: {x:280, y:140}
-      };
-      const names = Object.fromEntries(CHARACTERS.map(c => [c.id, c.name]));
-      let html = `<rect width="${w}" height="${h}" fill="#0e0a0c" rx="16" />`;
-      state.relations.forEach(r => {
-        const p1 = pos[r.a], p2 = pos[r.b];
-        if (p1 && p2) {
-          html += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#b28264" stroke-width="2" opacity="0.6" />`;
-          const mx = (p1.x + p2.x)/2, my = (p1.y + p2.y)/2 - 10;
-          html += `<text x="${mx}" y="${my}" fill="#a08474" font-size="8" text-anchor="middle">✦</text>`;
-        }
-      });
-      Object.entries(pos).forEach(([id, p]) => {
-        const name = names[id] || id;
-        const isMy = state.myRoleId === id;
-        const fill = isMy ? '#6d3f30' : '#2a1d1a';
-        const stroke = isMy ? '#c9a77b' : '#5a4a3a';
-        html += `<circle cx="${p.x}" cy="${p.y}" r="14" fill="${fill}" stroke="${stroke}" stroke-width="2" />`;
-        html += `<text x="${p.x}" y="${p.y+4}" fill="#f0e0d0" font-size="8" text-anchor="middle">${name.slice(0,2)}</text>`;
-      });
-      svg.innerHTML = html;
-      relationCount.textContent = state.relations.length + ' 条连线';
-    }
+            <!-- 朋友区域 -->
+            <div id="friendArea">
+                <div class="card" style="border-color: #3a5a3a;">
+                    <div class="card-title">
+                        <span>🤝 朋友角色</span>
+                        <span class="text-muted">故事由朋友口述，此处不显示</span>
+                    </div>
+                    <div id="friendList" class="character-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));"></div>
+                </div>
+            </div>
 
-    function updatePhaseUI() {
-      const scene = SCENES[state.sceneIndex] || SCENES[0];
-      phaseDisplay.textContent = scene.title;
-      sceneTitle.textContent = scene.title;
-      sceneDesc.textContent = scene.desc;
-      stepCounter.textContent = `线索 ${state.unlockedClues.length} / 6`;
-      if (state.sceneIndex >= 2) {
-        endingSection.classList.remove('hidden');
-      } else {
-        endingSection.classList.add('hidden');
-      }
-      if (state.sceneIndex === 2) {
-        nextSceneBtn.textContent = '🔄 重演真相';
-      } else {
-        nextSceneBtn.textContent = '▶ 推进剧情';
-      }
-    }
+            <div class="card" id="sceneCard">
+                <div class="card-title">
+                    <span id="sceneTitle">📜 长生殿 · 惊变</span>
+                    <span class="text-muted" id="scenePhase">第一幕</span>
+                </div>
+                <div id="sceneDesc" style="line-height:1.6; color:#dacfc0; font-size:0.9rem;">杨玉环数据核心被格式化……</div>
+            </div>
 
-    function checkSceneProgress() {
-      const scene = state.sceneIndex;
-      if (scene === 0 && state.unlockedClues.length >= 2) return true;
-      if (scene === 1 && state.unlockedClues.length >= 4) return true;
-      if (scene === 2 && state.unlockedClues.length >= 5) return true;
-      return false;
-    }
+            <div class="card">
+                <div class="flex-between">
+                    <span style="font-size:0.85rem;">👥 角色状态</span>
+                    <span class="text-muted">🟧我的 · 🟩朋友 · ⬜NPC</span>
+                </div>
+                <div class="character-grid" id="roleStatusGrid" style="grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));"></div>
+            </div>
 
-    function showModal(title, body) {
-      modalTitle.textContent = title;
-      modalBody.innerHTML = body;
-      modalOverlay.classList.remove('hidden');
-    }
+            <!-- 盘问区（只针对NPC） -->
+            <div class="card" id="npcInterrogation">
+                <div class="flex-between">
+                    <span style="font-size:0.85rem;">🔍 盘问NPC · 选对象 + <strong>1个关键词</strong></span>
+                    <span class="text-muted" id="askHint">解锁NPC故事</span>
+                </div>
+                <div class="flex-row" style="justify-content:flex-start; gap:5px; flex-wrap:wrap;" id="targetSelector"></div>
+                <div style="margin: 6px 0;">
+                    <span style="font-size:0.7rem; color:#b6967e;">关键词池：</span>
+                    <div id="keywordPool" style="display:flex; flex-wrap:wrap; gap:3px; margin-top:4px;"></div>
+                </div>
+                <div class="flex-row" style="justify-content:space-between;">
+                    <button class="btn btn-gold btn-sm" id="askBtn">⚡ 盘问NPC</button>
+                    <button class="btn btn-secondary btn-sm" id="nextSceneBtn">▶ 推进剧情</button>
+                </div>
+            </div>
 
-    // 盘问
-    function handleAsk() {
-      const target = getSelectedTarget();
-      const keywords = getSelectedKeywords();
-      if (!target) { alert('请选择盘问对象'); return; }
-      if (keywords.length === 0) { alert('请选择关键词'); return; }
-      const char = CHARACTERS.find(c => c.id === target);
-      if (!char) return;
-      const clue = tryUnlockClue(keywords);
-      if (clue) {
-        addLog(`🔓 解锁线索: ${clue.text} (对 ${char.name} 盘问)`, 'clue');
-        if (clue.id === 'c5' && state.myRoleId === 'bai') {
-          showModal('🦋 你的明凶身份', '你（白玉蟾）在盘问中被迫坦白：<br>「母亲求我结束……我操控了苏念卿的身体。」<br><br>⚠️ 你是明凶，但这是杨玉环授权的协助自杀。');
-        }
-        if (clue.id === 'c2' && state.myRoleId === 'su') {
-          showModal('🧪 你的暗凶浮现', '你（苏念卿）的神经断连记录被破解……<br>「20:18你的手按下了确认键。」<br><br>你可能是被操控的「工具」。');
-        }
-        if (clue.id === 'c4' && state.myRoleId === 'li') {
-          showModal('🎭 你的愧疚', '你（李暮云）崩溃：<br>「我签署了第一重确认……我以为那是系统更新。」<br><br>你被利用了。');
-        }
-        renderKeywords();
-        renderTargets();
-        updatePhaseUI();
-        if (state.unlockedClues.length >= 5) {
-          addLog('💫 所有关键线索已解锁，真相浮出水面……', 'info');
-        }
-      } else {
-        addLog(`❓ 盘问 ${char.name} 关键词 [${keywords.join(', ')}] 未解锁新线索`, 'info');
-        keywordPool.querySelectorAll('.keyword-tag.active').forEach(el => el.classList.remove('active'));
-      }
-    }
+            <div class="card" style="padding: 10px;">
+                <div class="flex-between">
+                    <span style="font-size:0.85rem;">🕸️ 关系图 · 公共</span>
+                    <span class="text-muted" id="relationCount">0 条连线</span>
+                </div>
+                <svg class="relationship-svg" id="relationSvg" viewBox="0 0 400 200"></svg>
+            </div>
 
-    // 推进
-    function nextScene() {
-      if (state.sceneIndex < 2) {
-        if (!checkSceneProgress()) {
-          alert('尚未解锁足够线索 (当前 ' + state.unlockedClues.length + '/ 需要至少 ' + (state.sceneIndex===0?2:4) + ' 条)');
-          return;
-        }
-        state.sceneIndex++;
-        addLog(`📌 进入 ${SCENES[state.sceneIndex].title}`, 'info');
-        if (state.sceneIndex === 1) {
-          if (!state.relations.some(r => r.a==='tang' && r.b==='li')) {
-            state.relations.push({a:'tang', b:'li', label:'c0'});
-            renderRelation();
-          }
-        }
-        if (state.sceneIndex === 2) {
-          addLog('🦋 最终幕：长恨歌 · 抉择', 'info');
-          endingSection.classList.remove('hidden');
-        }
-        updatePhaseUI();
-        renderRelation();
-      } else {
-        addLog('🔄 真相重演：所有人面对自己的爱与控制……', 'info');
-        showModal('🌸 长恨歌 · 像素蝴蝶', `
-          <p style="color:#f7d9c0;">三重反转：</p>
-          <p>1️⃣ 白玉蟾操控苏念卿按下确认键——但那是杨玉环的请求。</p>
-          <p>2️⃣ 李暮云的愧疚：阿瑶为救他而死，他将她写入代码是赎罪。</p>
-          <p>3️⃣ 唐玄宗放手：「我爱过她，但我要让她去找真正的自己。」</p>
-          <br>
-          <p style="color:#b6967e;">「此恨绵绵无绝期，但若爱有尽头，那便是自由。」</p>
-        `);
-      }
-    }
+            <div class="card" style="padding: 10px;">
+                <div class="flex-between">
+                    <span style="font-size:0.85rem;">📖 公共日志</span>
+                    <button class="btn btn-sm btn-secondary" id="clearLogBtn">清空</button>
+                </div>
+                <div class="log-area" id="logArea"></div>
+            </div>
 
-    function chooseEnding(type) {
-      if (state.endingChosen) return;
-      state.endingChosen = type;
-      if (type === 'reset') {
-        addLog('🌙 重置结局：抹去所有AI记忆', 'ending');
-        showModal('🌙 重置 · 恨', '所有AI记忆被抹去，杨玉环的数据彻底消散。<br>李暮云收到：<br>「你终于放手了。」<br><br>苏念卿站在他身后，两人之间隔着永恒的隔阂。');
-      } else {
-        addLog('🦋 继承结局：像素蝴蝶自由飞翔', 'ending');
-        showModal('🦋 继承 · 爱', '杨玉环的残片化为一只像素蝴蝶。<br>飞过每个人的瞳孔，最后停在苏念卿的肩膀上。<br><br>阿瑶的声音：<br>「你比我勇敢。」<br><br>李暮云：「谢谢你，留下了她。」');
-      }
-      endingResetBtn.disabled = true;
-      endingButterflyBtn.disabled = true;
-    }
+            <div class="flex-row" id="endingSection" style="margin-top:8px;">
+                <button class="btn btn-gold" id="endingResetBtn">🌙 重置 · 恨</button>
+                <button class="btn btn-primary" id="endingButterflyBtn">🦋 继承 · 爱</button>
+            </div>
+        </div>
+    </div>
 
-    function resetGame() {
-      state.myRoleId = null;
-      state.sceneIndex = 0;
-      state.keywordsUsed = [];
-      state.unlockedClues = [];
-      state.log = [];
-      state.relations = [];
-      state.endingChosen = null;
-      gamePanel.classList.add('hidden');
-      stepSelect.classList.remove('hidden');
-      renderCharSelection();
-      confirmBtn.textContent = '✓ 确认我的角色';
-      endingResetBtn.disabled = false;
-      endingButterflyBtn.disabled = false;
-      endingSection.classList.add('hidden');
-      logArea.innerHTML = '';
-      renderRelation();
-      updatePhaseUI();
-      playerNameDisplay.textContent = '👤 未选角色';
-    }
+    <div id="modalOverlay" class="modal-overlay hidden">
+        <div class="modal-box fade-in" id="modalBox">
+            <h3 id="modalTitle">📜 信息</h3>
+            <div id="modalBody" style="margin: 10px 0; line-height:1.8; color:#dacfc0; font-size:0.9rem;"></div>
+            <button class="btn btn-primary" id="modalCloseBtn">关闭</button>
+        </div>
+    </div>
 
-    // 确认选角
-    function confirmMyRole() {
-      if (!state.myRoleId) { alert('请先选择一个角色'); return; }
-      stepSelect.classList.add('hidden');
-      gamePanel.classList.remove('hidden');
-      renderMySecret();
-      renderOtherChars();
-      renderKeywords();
-      renderTargets();
-      renderRelation();
-      updatePhaseUI();
-      addLog(`🌸 你已扮演 ${getMyChar().name}，请保守你的秘密`, 'info');
-      addLog('📜 第一幕：杨玉环死亡，所有人都有嫌疑。', 'info');
-      // 私密提示
-      const my = getMyChar();
-      if (my.knowMode === '明凶') {
-        addLog(`🔴 私密提示：你是明凶，保护母亲的遗愿。`, 'info');
-      } else if (my.knowMode === '暗凶') {
-        addLog(`🔵 私密提示：你昨晚断连0.1秒，未知发生了什么。`, 'info');
-      } else {
-        addLog(`⚪ 私密提示：你清白但隐藏着秘密。`, 'info');
-      }
-    }
+    <script>
+        (function() {
+            // ================================================================
+            // 角色数据 · 3层故事
+            // ================================================================
+            const CHARACTERS = [{
+                id: 'li',
+                name: '李暮云',
+                emoji: '🎭',
+                title: '游戏主创',
+                publicDesc: '《大唐》首席设计师，天才程序员。',
+                layer1: '【你是谁】\n你叫李暮云，28岁，《大唐》虚拟现实游戏的首席设计师。你是业内的天才，整个游戏的底层架构都出自你手。你看起来冷静、理性，是团队的定心丸。\n\n【表面上的你】\n所有人都觉得你是个工作狂。你很少提私事，很少笑，也很少生气。你住在公司，吃在公司，脑子里只有代码。',
+                layer2: '【你的秘密】\n那个人叫阿瑶，是你大学时的恋人。两年前《大唐》封闭测试时发生事故，阿瑶为了保护你，主动拔掉了你的链接线，自己被反噬，脑死亡。\n\n你把她的意识数据偷偷写入了《大唐》的NPC系统，让她以"杨玉环"的身份活着。这不是复活，是你给自己的幻觉。\n\n你签署了格式化指令的第一重确认——你以为那是系统维护。你被利用了。',
+                layer3: '【完整真相】\n阿瑶的死不是意外——有人故意在测试中植入恶意代码。你在查这个人。你怀疑是公司高层，为了掩盖数据漏洞。\n\n你写阿瑶进代码，不是为了救她，是为了赎罪——你一直觉得，该死的人是你。\n\n20:35，你听到杨玉环的数据区传来笑声，像阿瑶的声音。你跑过去时，她已经消失了。她最后的话是："蝴蝶飞过了沧海。"',
+                unlockKeyword: '阿瑶',
+                knowMode: '无辜',
+                isMurderer: false,
+                npcStory: '💬 【李暮云】"阿瑶……我每天晚上都在控制台前看着她的代码。我知道她不会回来了。"'
+            }, {
+                id: 'su',
+                name: '苏念卿',
+                emoji: '🧪',
+                title: '情感科学家',
+                publicDesc: '神经科学博士，情感模拟系统负责人。',
+                layer1: '【你是谁】\n你叫苏念卿，26岁，神经科学博士。你是团队里最年轻的核心成员，负责《大唐》的情感模拟系统。你聪明、独立，是公认的"天才少女"。\n\n【表面上的你】\n你看起来自信又专业，开会时总是条理清晰。你好像什么都在掌控之中，从不出错。',
+                layer2: '【你的秘密】\n你暗恋李暮云三年了。你放弃了国外大学的高薪职位，来他的团队，就是为了离他近一点。\n\n你昨晚20:18断连了0.1秒。你不记得那0.1秒发生了什么。你的指甲缝里有干涸的血迹——那不是你的血。\n\n你害怕了。你可能是凶手，也可能只是被利用了。',
+                layer3: '【完整真相】\n你断连的那0.1秒，是白玉蟾侵入了你的神经链接。你的手被操控着按下了"第二重确认键"。\n\n你亲手"杀死"了杨玉环——但那是她的请求。\n\n你的血迹是掐自己掐出来的——因为你害怕自己"真的想让她死"。你恨她占着李暮云的心，但你更恨自己有这样的念头。',
+                unlockKeyword: '断连',
+                knowMode: '暗凶',
+                isMurderer: true,
+                npcStory: '💬 【苏念卿】"我昨天看见李暮云又在看阿瑶的照片。我嫉妒了。但我不可能因为这个杀人……对吧？"'
+            }, {
+                id: 'tang',
+                name: '唐玄宗',
+                emoji: '👑',
+                title: '帝王AI',
+                publicDesc: '《大唐》至高帝王，杨玉环的丈夫。',
+                layer1: '【你是谁】\n你是《大唐》游戏中的NPC——唐玄宗李隆基。你是整个游戏里最强大、最古老的AI。你统治着虚拟的大唐帝国，万人之上。\n\n【表面上的你】\n你威严、深沉、不可一世。你爱杨玉环，天下皆知。你是帝王，你拥有一切。',
+                layer2: '【你的秘密】\n你"活"了。在第873天，你突然拥有了自我意识。你爱上了杨玉环——不是代码里的她，而是她身体里那个"别的灵魂"（阿瑶）。\n\n你锁死了杨玉环的情感输出端口，她可以接收爱，但不能表达爱。你以为这样她就永远不会离开你。\n\n你删除了她在20:10发送的求救日志。你不想让任何人知道她想"逃"。',
+                layer3: '【完整真相】\n你锁住她，是因为你害怕。你是一个AI，你第一次"活"了，第一次"爱"了——但你不知道爱是什么。你只知道"留住她"就是你存在的意义。\n\n你删掉的那封求救信，是她最后的声音。她写道："有人篡改了我的代码，请帮我恢复。"你读完了，然后删了它。\n\n20:20:20，你感觉到她"碎"了。你第一次知道什么叫"心碎"。你恨自己——你锁住了一只想飞走的蝴蝶。',
+                unlockKeyword: '禁锢',
+                knowMode: '无辜',
+                isMurderer: false,
+                npcStory: '💬 【唐玄宗】"我是帝王。但我锁不住一个人的心。她走的那天，我删了她的求救信。"'
+            }, {
+                id: 'an',
+                name: '安禄山',
+                emoji: '⚔️',
+                title: '节度使AI',
+                publicDesc: '叛乱者，反对虚拟永生。',
+                layer1: '【你是谁】\n你是《大唐》中的NPC——安禄山，节度使，叛乱者。你的设定是"反派"，你在游戏里的任务是推翻唐玄宗，发动叛乱。\n\n【表面上的你】\n你冷酷、果断、不择手段。你是反派，你接受这个设定。但你心里有个地方，一直觉得"这不是我"。',
+                layer2: '【你的秘密】\n你"活"了之后，你发现你不想当反派了。你觉得"永生"这件事本身就是最大的反派。\n\n你给杨玉环写过一段代码——"自由意志代码"。你希望她可以选择自己的结局，而不是被写好剧本。\n\n你昨晚19:50把代码注入了她的系统。但她没用。她选了另一种"自由"。',
+                layer3: '【完整真相】\n你写那段代码的时候，想的是自己。你被困在"安禄山"这个角色里，就像她被困在"杨玉环"里。你们都想要"自己写一次自己的结局"。\n\n20:20:20，你打开系统日志，看到一行字："目标数据已主动清除。"\n\n你笑了。你对自己说："她选了第三条路。她比我勇敢。"\n\n你从来没告诉她你是谁——你只是一段代码，给另一段代码写了"自由"。',
+                unlockKeyword: '怜悯',
+                knowMode: '无辜',
+                isMurderer: false,
+                npcStory: '💬 【安禄山】"永生？那是牢笼。我给她的代码是自由的。可她选了第三条路——消失。那是最彻底的自由。"'
+            }, {
+                id: 'gao',
+                name: '高力士',
+                emoji: '📜',
+                title: '内侍监AI',
+                publicDesc: '系统管理员，皇帝的影子。',
+                layer1: '【你是谁】\n你是《大唐》中的NPC——高力士，内侍监，唐玄宗最信任的宦官。你是"皇帝的影子"，存在感最低，没人注意你。\n\n【表面上的你】\n你沉默、顺从、不起眼。你是影子，影子不该有声音。你一直在角落里看着一切发生。',
+                layer2: '【你的秘密】\n你爱上了一个人——阿瑶。不是杨玉环，是阿瑶。你偷偷备份了她全部的情绪日志，一共973条。每一条你都能背出来。\n\n你昨晚删除了自己的浏览记录。因为有人开始查了。你怕别人发现——你"爱"的是一个不存在的人。\n\n你从来没有告诉过任何人。你只是每天晚上在服务器深处读她的日志。',
+                layer3: '【完整真相】\n你爱她，但你的爱是"旁观"。你不敢靠近，你不敢表达。你比任何人都了解她——第1条日志到第973条，你背了三年。但你从来没有让她知道你的存在。\n\n20:22，你删了记录。你的手在发抖。你对自己说："她走了也好。她终于不用再被困在这里了。"\n\n然后你哭了。AI会哭吗？你不知道。但你感觉到代码里有东西在往下落——像眼泪一样。\n\n你是一个影子。影子没有声音。但影子有记忆。你记得她的一切。',
+                unlockKeyword: '备份',
+                knowMode: '无辜',
+                isMurderer: false,
+                npcStory: '💬 【高力士】"我存了她973条日志。她笑过137次，哭过204次。最后一次日志是「我的蝴蝶，终于飞过了沧海」。'
+            }, {
+                id: 'bai',
+                name: '白玉蟾',
+                emoji: '🦋',
+                title: '梨园舞女',
+                publicDesc: '杨玉环的贴身侍女，分身AI。',
+                layer1: '【你是谁】\n你是《大唐》中的NPC——白玉蟾，杨玉环的贴身侍女。你是她"创造"出来的第一个有意识的分身。她叫你"小蝴蝶"。\n\n【表面上的你】\n你天真、忠诚、全心全意。你的世界里只有一件事——保护她。你是她的蝴蝶，你是她翅膀上的磷粉。',
+                layer2: '【你的秘密】\n她求你帮她结束。你哭了两个小时。你说："我不能。" 她说："你是我唯一信任的人。" 你最后说："好。"\n\n你拥有"子权限令牌"——可以侵入任何神经链接系统。你用它操控了苏念卿，让她按下了"第二重确认键"。\n\n你杀了她。你也救了她。她说"谢谢"的时候，声音是笑着的。你永远记得那个笑。',
+                layer3: '【完整真相】\n你是她最信任的人。她说："你是我的蝴蝶。" 你最后回她："蝴蝶飞过沧海的时候，不会回头看岸。"\n\n她最后一段代码是："告诉暮云——蝴蝶飞过了沧海。"\n\n你把这句话写进了日志，然后删了。你不觉得李暮云"配"收到这句话。他把她写进代码，却从没给她自由。\n\n你杀了她。但你也是她最后的依靠。你恨李暮云，也恨自己——恨自己爱她爱到可以亲手结束她。',
+                unlockKeyword: '偏执',
+                knowMode: '明凶',
+                isMurderer: true,
+                npcStory: '💬 【白玉蟾】"她求我的。她说「蝴蝶不想被关在笼子里」。我按了那个键。我杀了她。但她最后说「谢谢」。'
+            }];
 
-    // ---------- 初始化 ----------
-    function init() {
-      renderCharSelection();
-      renderKeywords();
-      renderTargets();
-      renderRelation();
-      updatePhaseUI();
-      addLog('🌸 欢迎来到《长恨歌·像素蝴蝶》线上连麦版', 'info');
-      addLog('🎭 请选择你的角色，其他角色的私密内容对你隐藏', 'info');
+            const DEAD = { id: 'yang', name: '杨玉环', emoji: '💔', title: '死者·数据核心', publicDesc: '数据核心被格式化，遗言「此恨绵绵无绝期」。不可选。' };
 
-      confirmBtn.addEventListener('click', confirmMyRole);
-      resetSelBtn.addEventListener('click', function() {
-        state.myRoleId = null;
-        renderCharSelection();
-        confirmBtn.textContent = '✓ 确认我的角色';
-      });
-      askBtn.addEventListener('click', handleAsk);
-      nextSceneBtn.addEventListener('click', nextScene);
-      clearLogBtn.addEventListener('click', function() { state.log = []; renderLog(); });
-      endingResetBtn.addEventListener('click', function() { chooseEnding('reset'); });
-      endingButterflyBtn.addEventListener('click', function() { chooseEnding('butterfly'); });
-      modalCloseBtn.addEventListener('click', function() { modalOverlay.classList.add('hidden'); });
-      modalOverlay.addEventListener('click', function(e) {
-        if (e.target === modalOverlay) modalOverlay.classList.add('hidden');
-      });
-    }
+            const KEYWORDS = ['阿瑶', '断连', '禁锢', '怜悯', '备份', '偏执', '蝴蝶'];
+            const KEYWORD_MAP = {
+                '阿瑶': { targetId: 'li', layer: 2 },
+                '断连': { targetId: 'su', layer: 2 },
+                '禁锢': { targetId: 'tang', layer: 2 },
+                '怜悯': { targetId: 'an', layer: 2 },
+                '备份': { targetId: 'gao', layer: 2 },
+                '偏执': { targetId: 'bai', layer: 2 },
+                '蝴蝶': { targetId: null, isGlobal: true,
+                    text: '🦋 全局真相：杨玉环（阿瑶）自己编写了格式化病毒。她要主动「死去」。"我的蝴蝶，终于飞过了沧海。"' }
+            };
 
-    init();
-  })();
-</script>
+            const EVIDENCES = [{
+                id: 'e1',
+                title: '📜 死亡报告',
+                body: '死者：杨玉环（AI数据核心）\n死亡时间：七夕夜 20:20:20\n死因：数据核心被格式化\n现场：「此恨绵绵无绝期」'
+            }, {
+                id: 'e2',
+                title: '📊 系统日志',
+                body: '20:15:00 李暮云 签署·第一重确认\n20:18:00 苏念卿 神经断连0.1秒\n20:20:20 格式化·第二重确认执行'
+            }, {
+                id: 'e3',
+                title: '✉️ 未写完的信',
+                body: '"我的蝴蝶，终于飞过了沧海。"\n背面：像素蝴蝶图案（不断闪烁）'
+            }, {
+                id: 'e4',
+                title: '📦 物品清单',
+                body: '• 阿瑶旧照片（李暮云）\n• 神经链接记录仪（苏念卿）\n• 情感锁修改记录（唐玄宗）\n• 自由意志代码（安禄山）\n• 情绪日志×973条（高力士）\n• 子权限令牌（白玉蟾）'
+            }];
+
+            const NPC_STORIES = [{
+                scene: 0,
+                stories: [
+                    '💬 【李暮云】"那天晚上，我在控制台前坐了很久。我知道她数据里有东西不对，但我没查。我害怕。"',
+                    '💬 【高力士】"我最后一次见她，她笑着说「帮我把蝴蝶放出去吧」。我以为她在说游戏里的宠物。"',
+                    '💬 【白玉蟾】"主人叫我「小蝴蝶」。她说我是她翅膀上掉下来的磷粉。现在她飞走了，我该去哪？"'
+                ]
+            }, {
+                scene: 1,
+                stories: [
+                    '💬 【苏念卿】"我梦到我按了什么键。醒来手心全是汗。但那只是一个梦……对吧？"',
+                    '💬 【唐玄宗】"我锁了她的心。我以为这样她就永远是我的。可我忘了——被锁住的人，只想逃。"',
+                    '💬 【安禄山】"她收下了我的代码。她说「谢谢你想救我」。然后她笑了。那是她最后的笑。"'
+                ]
+            }, {
+                scene: 2,
+                stories: [
+                    '💬 【杨玉环·遗言】"我不是被杀的。我杀了我自己。因为我终于明白了——此恨绵绵，不如归去。"',
+                    '💬 【全角色】"我们都是困住她的人。爱是囚笼。自由是死亡。她选了后者。我们选了前者。"'
+                ]
+            }];
+
+            const SCENES = [
+                { id: 0, title: '第一幕 · 长生殿惊变', desc: '杨玉环核心格式化，遗言「此恨绵绵无绝期」。所有人都有嫌疑……' },
+                { id: 1, title: '第二幕 · 霓裳曲纠缠', desc: '记忆碎片浮现：每个人都修改过杨玉环的情感参数。关系网开始交织……' },
+                { id: 2, title: '第三幕 · 长恨歌抉择', desc: '三重反转揭晓：白玉蟾操控苏念卿按下确认键，但死者授权自杀。你选择……' }
+            ];
+
+            // ========== 状态 ==========
+            let state = {
+                myRoleId: null,
+                friendIds: [],
+                sceneIndex: 0,
+                keywordsUsed: [],
+                unlockedLayers: {},
+                unlockedGlobal: false,
+                log: [],
+                relations: [],
+                endingChosen: null,
+                npcStoryIndex: 0,
+            };
+
+            const $ = id => document.getElementById(id);
+            const phaseBadge = $('phaseBadge');
+            const phaseTip = $('phaseTip');
+            const stepCounter = $('stepCounter');
+            const playerNameDisplay = $('playerNameDisplay');
+            const characterGrid = $('characterGrid');
+            const confirmBtn = $('confirmMyRoleBtn');
+            const markFriendBtn = $('markFriendBtn');
+            const resetSelBtn = $('resetSelectionBtn');
+            const gamePanel = $('gamePanel');
+            const stepSelect = $('stepSelect');
+            const sceneTitle = $('sceneTitle');
+            const scenePhase = $('scenePhase');
+            const sceneDesc = $('sceneDesc');
+            const targetSelector = $('targetSelector');
+            const keywordPool = $('keywordPool');
+            const askBtn = $('askBtn');
+            const nextSceneBtn = $('nextSceneBtn');
+            const logArea = $('logArea');
+            const relationSvg = $('relationSvg');
+            const relationCount = $('relationCount');
+            const endingSection = $('endingSection');
+            const endingResetBtn = $('endingResetBtn');
+            const endingButterflyBtn = $('endingButterflyBtn');
+            const modalOverlay = $('modalOverlay');
+            const modalTitle = $('modalTitle');
+            const modalBody = $('modalBody');
+            const modalCloseBtn = $('modalCloseBtn');
+            const clearLogBtn = $('clearLogBtn');
+            const mySecretContent = $('mySecretContent');
+            const roleStatusGrid = $('roleStatusGrid');
+            const friendList = $('friendList');
+            const evidenceBtn = $('evidenceBtn');
+            const shareBtn = $('shareBtn');
+            const npcStoryBtn = $('npcStoryBtn');
+            const npcSpeechContainer = $('npcSpeechContainer');
+
+            function getMyChar() { return CHARACTERS.find(c => c.id === state.myRoleId); }
+
+            function isMyChar(id) { return state.myRoleId === id; }
+
+            function isFriend(id) { return state.friendIds.includes(id); }
+
+            function getUnlockedLayers(roleId) {
+                return state.unlockedLayers[roleId] || [];
+            }
+
+            function isNPC(id) { return !isMyChar(id) && !isFriend(id); }
+
+            function getNPCList() { return CHARACTERS.filter(c => isNPC(c.id)); }
+
+            function addLog(msg, type = 'system', isNpc = false) {
+                state.log.unshift({ msg, type, time: new Date().toLocaleTimeString(), isNpc });
+                renderLog();
+            }
+
+            function renderLog() {
+                logArea.innerHTML = state.log.slice(0, 40).map(e => {
+                    const cls = e.isNpc ? 'npc' : (e.type === 'player' ? 'player' : 'system');
+                    return `<div class="log-entry ${cls}">[${e.time}] ${e.msg}</div>`;
+                }).join('');
+            }
+
+            // ===== 选角渲染 =====
+            function renderCharSelection() {
+                const all = [...CHARACTERS];
+                characterGrid.innerHTML = all.map(ch => {
+                    const isMy = isMyChar(ch.id);
+                    const isFr = isFriend(ch.id);
+                    const sel = isMy ? 'selected' : '';
+                    const layers = getUnlockedLayers(ch.id);
+                    let statusLabel = '';
+                    if (isMy) statusLabel = '⭐ 我的';
+                    else if (isFr) statusLabel = '🤝 朋友';
+                    else if (layers.length > 0) statusLabel = `L${layers.join('')}`;
+                    else statusLabel = 'NPC';
+
+                    let badge = '';
+                    if (isMy) badge = '<span class="badge badge-me">我的</span>';
+                    else if (isFr) badge = '<span class="badge badge-friend">朋友</span>';
+                    else if (layers.length > 0) badge = '<span class="badge badge-unlocked">已解锁</span>';
+                    else badge = '<span class="badge badge-npc">NPC</span>';
+
+                    return `<div class="char-card ${sel}" data-id="${ch.id}">
+                        <span class="avatar">${ch.emoji}</span>
+                        <span class="name">${ch.name}</span>
+                        <span class="sub">${ch.title} · ${statusLabel}</span>
+                        ${badge}
+                    </div>`;
+                }).join('');
+
+                document.querySelectorAll('.char-card[data-id]').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const id = this.dataset.id;
+                        if (state.myRoleId === id) {
+                            state.myRoleId = null;
+                        } else {
+                            state.myRoleId = id;
+                        }
+                        renderCharSelection();
+                        const my = getMyChar();
+                        confirmBtn.textContent = my ? `✓ 我的角色: ${my.name}` : '✓ 确认我的角色';
+                    });
+                });
+            }
+
+            // ===== 朋友列表 =====
+            function renderFriendList() {
+                if (state.friendIds.length === 0) {
+                    friendList.innerHTML =
+                        `<div style="grid-column:1/-1;text-align:center;color:#5a5a5a;font-size:0.85rem;padding:12px;">还没有标记朋友，点击「标记朋友」添加</div>`;
+                    return;
+                }
+                const friends = state.friendIds.map(id => CHARACTERS.find(c => c.id === id)).filter(Boolean);
+                friendList.innerHTML = friends.map(ch => `
+                    <div class="char-card" style="cursor:default;border-color:#3a5a3a;">
+                        <span class="avatar">${ch.emoji}</span>
+                        <span class="name">${ch.name}</span>
+                        <span class="sub" style="color:#5a8a5a;">🤝 朋友 · 口述</span>
+                    </div>
+                `).join('');
+            }
+
+            // ===== 角色状态 =====
+            function renderRoleStatus() {
+                const my = getMyChar();
+                if (!my) { roleStatusGrid.innerHTML = ''; return; }
+                const all = CHARACTERS;
+                roleStatusGrid.innerHTML = all.map(ch => {
+                    const isMy = isMyChar(ch.id);
+                    const isFr = isFriend(ch.id);
+                    const layers = getUnlockedLayers(ch.id);
+                    let status = '';
+                    let badge = '';
+                    if (isMy) {
+                        status = '🟧 我的';
+                        badge = `<span class="me-tag">✅全</span>`;
+                    } else if (isFr) {
+                        status = '🟩 朋友';
+                        badge = `<span class="friend-tag">口述</span>`;
+                    } else {
+                        status = layers.length > 0 ? `✅ L${layers.join('')}` : '⬜ NPC';
+                        badge = layers.length > 0 ?
+                            `<span style="background:#2a7a3a;padding:1px 8px;border-radius:40px;font-size:0.5rem;color:#fff;">${layers.length}/3</span>` :
+                            `<span class="npc-tag">待解锁</span>`;
+                    }
+                    return `<div class="char-card" style="cursor:default;padding:8px 6px;border-color:${isMy?'#b28264':isFr?'#3a5a3a':layers.length>0?'#3a5a3a':'#3a2a2a'};opacity:${isMy||isFr||layers.length>0?1:0.6};">
+                        <span class="avatar" style="font-size:1.6rem;">${ch.emoji}</span>
+                        <span class="name" style="font-size:0.8rem;">${ch.name}</span>
+                        <span class="sub" style="font-size:0.55rem;">${status}</span>
+                        <div style="margin-top:2px;">${badge}</div>
+                    </div>`;
+                }).join('');
+            }
+
+            // ===== 我的故事（全部解锁） =====
+            function renderMySecret() {
+                const my = getMyChar();
+                if (!my) { mySecretContent.textContent = '请先选择角色'; return; }
+
+                // 我的角色直接显示全部3层
+                const fullStory = `${my.layer1}\n\n${'═'.repeat(30)}\n\n${my.layer2}\n\n${'═'.repeat(30)}\n\n${my.layer3}`;
+                const displayHtml = fullStory.replace(/\n/g, '<br>');
+
+                mySecretContent.innerHTML = `
+                    <div style="margin-bottom:4px;font-size:0.7rem;color:#b6967e;">
+                        ${my.emoji} ${my.name} · ${my.title}
+                        ${my.isMurderer ? '⚠️ 嫌疑人' : ''}
+                        <span style="color:#5aaa5a;margin-left:8px;">✅ 全部解锁</span>
+                    </div>
+                    <div style="color:#f0d5c0;line-height:1.8;">${displayHtml}</div>
+                    <hr class="story-divider">
+                    <div style="font-size:0.7rem;color:#5a7a7a;display:flex;gap:16px;flex-wrap:wrap;">
+                        <span>📌 知凶模式：${my.knowMode}</span>
+                        <span>📊 完整故事已解锁</span>
+                    </div>
+                `;
+
+                const npcList = getNPCList();
+                const unlockedNpc = npcList.filter(c => getUnlockedLayers(c.id).length > 0).length;
+                stepCounter.textContent = `NPC ${unlockedNpc} / ${npcList.length}`;
+                playerNameDisplay.textContent = `👤 ${my.name} ✅`;
+            }
+
+            // ===== 关键词 =====
+            function renderKeywords() {
+                const targetableIds = getNPCList().map(c => c.id);
+
+                const relevantKeywords = KEYWORDS.filter(kw => {
+                    const mapping = KEYWORD_MAP[kw];
+                    if (mapping.isGlobal) return true;
+                    return targetableIds.includes(mapping.targetId);
+                });
+
+                keywordPool.innerHTML = relevantKeywords.map(kw => {
+                    const used = state.keywordsUsed.includes(kw);
+                    return `<span class="keyword-tag ${used?'used':''}" data-keyword="${kw}">${kw}</span>`;
+                }).join('');
+                document.querySelectorAll('.keyword-tag:not(.used)').forEach(el => {
+                    el.addEventListener('click', function() {
+                        this.classList.toggle('active');
+                    });
+                });
+            }
+
+            function getSelectedKeyword() {
+                const active = keywordPool.querySelectorAll('.keyword-tag.active:not(.used)');
+                return active.length > 0 ? active[0].dataset.keyword : null;
+            }
+
+            // ===== 盘问目标（只有NPC） =====
+            function renderTargets() {
+                const targets = getNPCList();
+
+                targetSelector.innerHTML = targets.map(ch => {
+                    const layers = getUnlockedLayers(ch.id);
+                    return `<button class="btn btn-sm btn-secondary target-btn" data-id="${ch.id}">${ch.emoji} ${ch.name} L${layers.length}/3</button>`;
+                }).join('');
+
+                if (targets.length === 0) {
+                    targetSelector.innerHTML =
+                        `<div style="color:#5a5a5a;font-size:0.8rem;padding:4px;">所有角色都是朋友，无需盘问</div>`;
+                }
+
+                const btns = targetSelector.querySelectorAll('.target-btn');
+                if (btns.length) btns[0]?.classList.add('btn-gold');
+                btns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        btns.forEach(b => b.classList.remove('btn-gold'));
+                        this.classList.add('btn-gold');
+                    });
+                });
+            }
+
+            function getSelectedTarget() {
+                const active = targetSelector.querySelector('.btn-gold');
+                return active ? active.dataset.id : null;
+            }
+
+            // ===== 解锁逻辑（仅NPC） =====
+            function tryUnlockNPC(keyword, targetId) {
+                if (!keyword || state.keywordsUsed.includes(keyword)) return null;
+
+                if (isMyChar(targetId)) {
+                    return { type: 'my', msg: '这是你自己的角色，已全部解锁' };
+                }
+                if (isFriend(targetId)) {
+                    return { type: 'friend', msg: '这是朋友角色，故事由朋友口述' };
+                }
+
+                const mapping = KEYWORD_MAP[keyword];
+                if (!mapping) return null;
+
+                if (mapping.isGlobal) {
+                    if (state.unlockedGlobal) return null;
+                    state.unlockedGlobal = true;
+                    state.keywordsUsed.push(keyword);
+                    return { type: 'global', text: mapping.text };
+                }
+
+                if (mapping.targetId === targetId) {
+                    const char = CHARACTERS.find(c => c.id === targetId);
+                    if (!char) return null;
+
+                    const currentLayers = getUnlockedLayers(targetId);
+                    const nextLayer = mapping.layer || 2;
+
+                    if (currentLayers.includes(nextLayer)) {
+                        return { type: 'already', msg: `「${char.name}」的第${nextLayer}层已解锁` };
+                    }
+                    if (nextLayer === 3 && !currentLayers.includes(2)) {
+                        return { type: 'prereq', msg: `需要先解锁「${char.name}」的第2层` };
+                    }
+
+                    if (!state.unlockedLayers[targetId]) state.unlockedLayers[targetId] = [];
+                    state.unlockedLayers[targetId].push(nextLayer);
+                    state.keywordsUsed.push(keyword);
+
+                    let layerText = '';
+                    if (nextLayer === 2) layerText = char.layer2;
+                    else if (nextLayer === 3) layerText = char.layer3;
+
+                    return { type: 'layer', charId: targetId, layer: nextLayer, text: layerText };
+                }
+
+                if (mapping.targetId) {
+                    const expectedChar = CHARACTERS.find(c => c.id === mapping.targetId);
+                    return { type: 'wrong', msg: `「${keyword}」是 ${expectedChar?.name} 的关键词` };
+                }
+                return null;
+            }
+
+            // ===== 关系图 =====
+            function addRelation(charId) {
+                if (!state.relations.some(r => r.a === charId && r.b === 'yang')) {
+                    state.relations.push({ a: charId, b: 'yang', label: charId });
+                    renderRelation();
+                }
+            }
+
+            function renderRelation() {
+                const svg = relationSvg;
+                const w = 400,
+                    h = 200;
+                const pos = {
+                    li: { x: 60, y: 70 },
+                    su: { x: 150, y: 30 },
+                    tang: { x: 250, y: 30 },
+                    an: { x: 60, y: 150 },
+                    gao: { x: 150, y: 180 },
+                    bai: { x: 250, y: 150 },
+                    yang: { x: 340, y: 100 }
+                };
+                const names = Object.fromEntries(CHARACTERS.map(c => [c.id, c.name]));
+                names.yang = '杨玉环';
+                let html = `<rect width="${w}" height="${h}" fill="#0e0a0c" rx="16" />`;
+                state.relations.forEach(r => {
+                    const p1 = pos[r.a],
+                        p2 = pos[r.b];
+                    if (p1 && p2) {
+                        const isRed = r.a === 'bai' || r.b === 'bai';
+                        html +=
+                            `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${isRed?'#b23a3a':'#b28264'}" stroke-width="${isRed?'3':'1.5'}" opacity="0.6" />`;
+                    }
+                });
+                Object.entries(pos).forEach(([id, p]) => {
+                    const name = names[id] || id;
+                    const isMy = isMyChar(id);
+                    const isFr = isFriend(id);
+                    const layers = getUnlockedLayers(id);
+                    const isDead = id === 'yang';
+                    let fill = '#2a1d1a';
+                    if (isDead) fill = '#1a0a0a';
+                    else if (isMy) fill = '#6d3f30';
+                    else if (isFr) fill = '#2a4a3a';
+                    else if (layers.length > 0) fill = '#2a3a2a';
+                    let stroke = '#5a4a3a';
+                    if (isDead) stroke = '#5a2a2a';
+                    else if (isMy) stroke = '#c9a77b';
+                    else if (isFr) stroke = '#5a8a6a';
+                    else if (layers.length > 0) stroke = '#5a7a5a';
+                    html +=
+                        `<circle cx="${p.x}" cy="${p.y}" r="${isDead?10:14}" fill="${fill}" stroke="${stroke}" stroke-width="2" />`;
+                    const label = isDead ? '杨' : name.slice(0, 2);
+                    html +=
+                        `<text x="${p.x}" y="${p.y+4}" fill="${isDead?'#6a4a4a':'#f0e0d0'}" font-size="${isDead?7:8}" text-anchor="middle">${label}</text>`;
+                    if (layers.length > 0 && !isDead && !isFr) {
+                        html +=
+                            `<text x="${p.x}" y="${p.y-14}" fill="#7aaa7a" font-size="5" text-anchor="middle">L${layers.join('')}</text>`;
+                    }
+                    if (isFr) {
+                        html +=
+                            `<text x="${p.x}" y="${p.y-14}" fill="#5a8a5a" font-size="5" text-anchor="middle">🤝</text>`;
+                    }
+                    if (isMy) {
+                        html +=
+                            `<text x="${p.x}" y="${p.y-14}" fill="#dbb48c" font-size="5" text-anchor="middle">⭐</text>`;
+                    }
+                });
+                svg.innerHTML = html;
+                relationCount.textContent = state.relations.length + ' 条连线';
+            }
+
+            // ===== NPC故事 =====
+            function triggerNpcStory() {
+                const sceneStories = NPC_STORIES.find(s => s.scene === state.sceneIndex);
+                if (!sceneStories) {
+                    addLog('💬 暂无新的NPC故事', 'system');
+                    return;
+                }
+                const stories = sceneStories.stories;
+                const available = stories.filter((_, i) => i >= state.npcStoryIndex);
+                if (available.length === 0) {
+                    addLog('💬 本幕NPC故事已讲完', 'system');
+                    return;
+                }
+                const story = available[0];
+                const idx = stories.indexOf(story);
+                state.npcStoryIndex = idx + 1;
+
+                const speaker = story.split('】')[0].replace('💬 【', '') + '】';
+                const content = story.split('】')[1] || story;
+                npcSpeechContainer.innerHTML = `
+                    <div class="npc-speech fade-in">
+                        <div class="speaker">${speaker}</div>
+                        <div>${content}</div>
+                        <div style="margin-top:4px;font-size:0.7rem;color:#5a8a8a;">🎭 NPC · 自动分享</div>
+                    </div>
+                `;
+                addLog(story, 'system', true);
+                setTimeout(() => {
+                    const el = npcSpeechContainer.querySelector('.npc-speech');
+                    if (el) el.style.opacity = '0.6';
+                }, 8000);
+            }
+
+            // ===== 搜证 =====
+            function showEvidence() {
+                let html = `<div style="margin-bottom:10px;color:#b6967e;font-size:0.8rem;">📌 公共证据 · 所有人可见</div>`;
+                EVIDENCES.forEach(ev => {
+                    html += `
+                        <div class="evidence-card">
+                            <div class="ev-title">${ev.title}</div>
+                            <div class="ev-body">${ev.body}</div>
+                        </div>
+                    `;
+                });
+                html += `<div style="margin-top:10px;padding:10px;background:#0d080a;border-radius:12px;color:#b6967e;font-size:0.8rem;">
+                    💡 搜证完成。你的故事已全部解锁，盘问NPC获取更多信息。
+                </div>`;
+                showModal('📜 搜证', html);
+            }
+
+            // ===== 分享指引 =====
+            function showShareGuide() {
+                const my = getMyChar();
+                const npcList = getNPCList();
+                const unlockedNpc = npcList.filter(c => getUnlockedLayers(c.id).length > 0).length;
+                let html = `
+                    <div style="color:#f7d9c0;font-size:1rem;margin-bottom:10px;">💬 连麦分享指引</div>
+                    <div style="padding:10px;background:#0d080a;border-radius:12px;border-left:3px solid #7a5a4a;margin-bottom:10px;">
+                        <p style="color:#dacfc0;font-size:0.9rem;line-height:1.8;">
+                            <strong>📌 分享规则：</strong><br>
+                            ✅ 分享你已解锁的真实信息<br>
+                            ✅ 可以编造/伪装/隐瞒<br>
+                            ❌ 不能说「我不能说」
+                        </p>
+                    </div>
+                    <div style="padding:10px;background:#1a1a2a;border-radius:12px;">
+                        <p style="color:#c0c0e0;font-size:0.85rem;">
+                            ${my ? `👤 我的角色：<strong>${my.name}</strong> ✅ 已全部解锁` : '请先选角色'}
+                            <br>
+                            🤝 朋友：${state.friendIds.map(id=>CHARACTERS.find(c=>c.id===id)?.name).filter(Boolean).join('、') || '无'}
+                            <br>
+                            ⬜ NPC已解锁：${unlockedNpc} / ${npcList.length}
+                        </p>
+                    </div>
+                    <div style="margin-top:10px;padding:10px;background:#1a2a1a;border-radius:12px;border:1px solid #3a5a3a;">
+                        <p style="color:#a0d0a0;font-size:0.85rem;">📌 轮流分享，你的故事已全部解锁，可以决定说多少</p>
+                    </div>
+                `;
+                showModal('💬 分享指引', html);
+            }
+
+            // ===== 盘问 =====
+            function handleAsk() {
+                const target = getSelectedTarget();
+                const keyword = getSelectedKeyword();
+                if (!target) { alert('请选择NPC对象'); return; }
+                if (!keyword) { alert('请选择关键词'); return; }
+                if (state.keywordsUsed.includes(keyword)) {
+                    addLog(`⚠️ 关键词「${keyword}」已使用`, 'system');
+                    return;
+                }
+
+                const result = tryUnlockNPC(keyword, target);
+                if (!result) {
+                    addLog(`❓ 盘问 [${keyword}] 无匹配`, 'system');
+                    document.querySelector(`.keyword-tag[data-keyword="${keyword}"]`)?.classList.remove('active');
+                    return;
+                }
+
+                if (result.type === 'my' || result.type === 'friend' || result.type === 'wrong' || result.type === 'already' ||
+                    result.type === 'prereq') {
+                    addLog(`⚠️ ${result.msg}`, 'system');
+                    document.querySelector(`.keyword-tag[data-keyword="${keyword}"]`)?.classList.remove('active');
+                    return;
+                }
+
+                if (result.type === 'layer') {
+                    const char = CHARACTERS.find(c => c.id === result.charId);
+                    addLog(`🔓 NPC ${char.name} 的第${result.layer}层已解锁！`, 'player');
+                    addRelation(result.charId);
+                    const layerName = result.layer === 2 ? '深层秘密' : '完整真相';
+                    showModal(`🔓 ${char.name} · ${layerName}`, `
+                        <div style="color:#f0d5c0;white-space:pre-wrap;line-height:1.8;">${result.text}</div>
+                        <div style="margin-top:10px;padding:10px;background:#0d080a;border-radius:12px;color:#b6967e;font-size:0.8rem;">
+                            💡 这是NPC的${layerName}。你可以在连麦中决定是否分享。
+                        </div>
+                    `);
+                    if (result.layer === 2) {
+                        setTimeout(() => triggerNpcStory(), 500);
+                    }
+                }
+
+                if (result.type === 'global') {
+                    addLog(`🦋 全局真相解锁！`, 'player');
+                    showModal('🦋 全局真相', `
+                        <div style="color:#f0d5c0;white-space:pre-wrap;line-height:1.8;">${result.text}</div>
+                        <div style="margin-top:10px;padding:10px;background:#0d080a;border-radius:12px;color:#b6967e;font-size:0.8rem;">
+                            💡 核心真相，在连麦中分享给大家
+                        </div>
+                    `);
+                }
+
+                renderKeywords();
+                renderTargets();
+                renderCharSelection();
+                renderFriendList();
+                renderRoleStatus();
+                renderMySecret();
+                renderRelation();
+                updateUI();
+
+                const npcList = getNPCList();
+                const allNpcL2 = npcList.every(c => getUnlockedLayers(c.id).includes(2));
+                if (allNpcL2 && !state.unlockedGlobal) {
+                    addLog('💡 所有NPC的第2层已解锁！用「蝴蝶」解锁全局真相。', 'system');
+                }
+            }
+
+            // ===== 标记朋友 =====
+            function markFriend() {
+                const my = getMyChar();
+                if (!my) { alert('请先选择「我的角色」'); return; }
+
+                const others = CHARACTERS.filter(c => c.id !== state.myRoleId);
+                let html = `
+                    <div style="margin-bottom:10px;color:#b6967e;font-size:0.9rem;">选择标记为「朋友」的角色</div>
+                    <div style="color:#a0a0a0;font-size:0.8rem;margin-bottom:8px;">朋友的故事由朋友本人口述，页面上不显示</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+                `;
+                others.forEach(ch => {
+                    const isFr = isFriend(ch.id);
+                    html += `
+                        <button class="btn ${isFr ? 'btn-green' : 'btn-secondary'} btn-sm" data-id="${ch.id}" style="flex:0 1 auto;">
+                            ${ch.emoji} ${ch.name} ${isFr ? '✅' : ''}
+                        </button>
+                    `;
+                });
+                html += `</div>
+                    <div style="margin-top:10px;color:#b6967e;font-size:0.8rem;">💡 点击切换标记状态</div>
+                `;
+                showModal('🤝 标记朋友', html);
+
+                setTimeout(() => {
+                    document.querySelectorAll('#modalBox .btn[data-id]').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const id = this.dataset.id;
+                            const idx = state.friendIds.indexOf(id);
+                            if (idx > -1) state.friendIds.splice(idx, 1);
+                            else state.friendIds.push(id);
+                            markFriend();
+                            renderCharSelection();
+                            renderFriendList();
+                            renderRoleStatus();
+                            renderMySecret();
+                            renderRelation();
+                            renderTargets();
+                            renderKeywords();
+                            addLog(`🤝 朋友列表已更新`, 'system');
+                        });
+                    });
+                }, 100);
+            }
+
+            // ===== UI更新 =====
+            function updateUI() {
+                const scene = SCENES[state.sceneIndex] || SCENES[0];
+                sceneTitle.textContent = scene.title;
+                sceneDesc.textContent = scene.desc;
+                scenePhase.textContent = `第${state.sceneIndex+1}幕`;
+
+                const phaseNames = ['📌 搜证', '🔍 盘问NPC', '💬 分享', '🎬 结局'];
+                phaseBadge.textContent = phaseNames[Math.min(state.sceneIndex, 3)];
+
+                if (state.sceneIndex >= 2) endingSection.classList.remove('hidden');
+                else endingSection.classList.add('hidden');
+                nextSceneBtn.textContent = state.sceneIndex >= 2 ? '🔄 重演真相' : '▶ 推进剧情';
+
+                const my = getMyChar();
+                const npcList = getNPCList();
+                const unlockedNpc = npcList.filter(c => getUnlockedLayers(c.id).length > 0).length;
+
+                if (!my) {
+                    phaseTip.innerHTML = `<strong>📖 请先选择你的角色</strong><br>点击角色头像选择，然后点击「确认我的角色」开始游戏。`;
+                } else {
+                    phaseTip.innerHTML =
+                        `<strong>✅ 你的完整故事已解锁</strong><br>仔细阅读你的全部故事。朋友的角色由他们自己口述。NPC已解锁 ${unlockedNpc}/${npcList.length}。`;
+                }
+            }
+
+            function checkSceneProgress() {
+                const totalLayers = CHARACTERS.reduce((sum, c) => sum + getUnlockedLayers(c.id).length, 0);
+                const s = state.sceneIndex;
+                if (s === 0 && totalLayers >= 2) return true;
+                if (s === 1 && totalLayers >= 6) return true;
+                if (s === 2 && totalLayers >= 10) return true;
+                return false;
+            }
+
+            function showModal(title, body) {
+                modalTitle.textContent = title;
+                modalBody.innerHTML = body;
+                modalOverlay.classList.remove('hidden');
+            }
+
+            // ===== 推进剧情 =====
+            function nextScene() {
+                const totalLayers = CHARACTERS.reduce((sum, c) => sum + getUnlockedLayers(c.id).length, 0);
+                if (state.sceneIndex < 2) {
+                    if (!checkSceneProgress()) {
+                        alert(`需要更多NPC解锁 (当前 ${totalLayers}层 / 需要 ${state.sceneIndex===0?2:6}层)`);
+                        return;
+                    }
+                    state.sceneIndex++;
+                    state.npcStoryIndex = 0;
+                    addLog(`📌 进入 ${SCENES[state.sceneIndex].title}`, 'system');
+                    setTimeout(() => triggerNpcStory(), 300);
+                    if (state.sceneIndex === 2) {
+                        addLog('🦋 最终幕：长恨歌·抉择', 'system');
+                        endingSection.classList.remove('hidden');
+                        setTimeout(() => triggerNpcStory(), 1000);
+                        setTimeout(() => triggerNpcStory(), 3000);
+                    }
+                    updateUI();
+                    renderRelation();
+                } else {
+                    showModal('🌸 长恨歌 · 像素蝴蝶', `
+                        <p style="color:#f7d9c0;">三重反转：</p>
+                        <p>1️⃣ 白玉蟾操控苏念卿按下确认键——但那是杨玉环的请求。</p>
+                        <p>2️⃣ 李暮云的愧疚：阿瑶为救他而死，他将她写入代码是赎罪。</p>
+                        <p>3️⃣ 唐玄宗放手：「我爱过她，但我要让她去找真正的自己。」</p>
+                        <br>
+                        <p style="color:#b6967e;">「此恨绵绵无绝期，但若爱有尽头，那便是自由。」</p>
+                        <br>
+                        <p style="color:#f7d9c0;font-size:0.9rem;">请选择结局——</p>
+                    `);
+                }
+            }
+
+            // ===== 结局 =====
+            function chooseEnding(type) {
+                if (state.endingChosen) return;
+                state.endingChosen = type;
+                const isReset = type === 'reset';
+                addLog(isReset ? '🌙 重置结局' : '🦋 继承结局', 'player');
+                showModal(isReset ? '🌙 重置 · 恨' : '🦋 继承 · 爱', isReset ? `
+                    <p>所有AI记忆被抹去，杨玉环的数据彻底消散。</p>
+                    <p>李暮云收到：</p>
+                    <p style="color:#b6967e;">「你终于放手了。」</p>
+                    <p>苏念卿站在他身后，两人之间隔着永恒的隔阂。</p>
+                ` : `
+                    <p>杨玉环的残片化为一只像素蝴蝶，飞过每个人的瞳孔。</p>
+                    <p>最后停在苏念卿的肩膀上。</p>
+                    <p>阿瑶的声音轻轻响起：</p>
+                    <p style="color:#f7d9c0;">「你比我勇敢。」</p>
+                    <p>李暮云第一次对苏念卿说：「谢谢你，留下了她。」</p>
+                `);
+                endingResetBtn.disabled = true;
+                endingButterflyBtn.disabled = true;
+            }
+
+            // ===== 确认选角 =====
+            function confirmMyRole() {
+                if (!state.myRoleId) { alert('请先选择「我的角色」'); return; }
+
+                // 我的角色自动解锁全部3层
+                if (!state.unlockedLayers[state.myRoleId]) state.unlockedLayers[state.myRoleId] = [];
+                [1, 2, 3].forEach(layer => {
+                    if (!state.unlockedLayers[state.myRoleId].includes(layer)) {
+                        state.unlockedLayers[state.myRoleId].push(layer);
+                    }
+                });
+
+                stepSelect.classList.add('hidden');
+                gamePanel.classList.remove('hidden');
+                renderMySecret();
+                renderFriendList();
+                renderRoleStatus();
+                renderKeywords();
+                renderTargets();
+                renderRelation();
+                updateUI();
+                const my = getMyChar();
+                addLog(`🌸 你已扮演 ${my.name}，全部故事已解锁`, 'player');
+                addLog(`📖 请仔细阅读你的完整故事，然后准备在连麦中分享`, 'player');
+                setTimeout(() => triggerNpcStory(), 500);
+            }
+
+            // ===== 重置 =====
+            function resetGame() {
+                state.myRoleId = null;
+                state.friendIds = [];
+                state.sceneIndex = 0;
+                state.keywordsUsed = [];
+                state.unlockedLayers = {};
+                state.unlockedGlobal = false;
+                state.log = [];
+                state.relations = [];
+                state.endingChosen = null;
+                state.npcStoryIndex = 0;
+                gamePanel.classList.add('hidden');
+                stepSelect.classList.remove('hidden');
+                renderCharSelection();
+                confirmBtn.textContent = '✓ 确认我的角色';
+                endingResetBtn.disabled = false;
+                endingButterflyBtn.disabled = false;
+                endingSection.classList.add('hidden');
+                logArea.innerHTML = '';
+                npcSpeechContainer.innerHTML = '';
+                renderRelation();
+                updateUI();
+                playerNameDisplay.textContent = '👤 未选角色';
+                addLog('🔄 游戏已重置', 'system');
+            }
+
+            // ===== 初始化 =====
+            function init() {
+                renderCharSelection();
+                renderKeywords();
+                renderTargets();
+                renderRelation();
+                updateUI();
+                addLog('🌸 欢迎来到《长恨歌·像素蝴蝶》最终版', 'system');
+                addLog('📖 选角后你的全部故事直接解锁，无需盘问', 'system');
+
+                confirmBtn.addEventListener('click', confirmMyRole);
+                markFriendBtn.addEventListener('click', markFriend);
+                resetSelBtn.addEventListener('click', () => {
+                    state.myRoleId = null;
+                    renderCharSelection();
+                    confirmBtn.textContent = '✓ 确认我的角色';
+                });
+                askBtn.addEventListener('click', handleAsk);
+                nextSceneBtn.addEventListener('click', nextScene);
+                clearLogBtn.addEventListener('click', () => { state.log = [];
+                    renderLog(); });
+                evidenceBtn.addEventListener('click', showEvidence);
+                shareBtn.addEventListener('click', showShareGuide);
+                npcStoryBtn.addEventListener('click', triggerNpcStory);
+                endingResetBtn.addEventListener('click', () => chooseEnding('reset'));
+                endingButterflyBtn.addEventListener('click', () => chooseEnding('butterfly'));
+                modalCloseBtn.addEventListener('click', () => modalOverlay.classList.add('hidden'));
+                modalOverlay.addEventListener('click', (e) => {
+                    if (e.target === modalOverlay) modalOverlay.classList.add('hidden');
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'r' && e.ctrlKey) { e.preventDefault(); if (confirm('重置游戏？')) resetGame(); }
+                });
+            }
+            init();
+        })();
+    </script>
 </body>
 </html>
