@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>长恨歌 · 像素蝴蝶</title>
+    <title>长恨歌 · 像素蝴蝶 </title>
     <style>
+        /* ===== 完整样式，与最终统一版一致 ===== */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -531,14 +532,24 @@
             background: #4a6a4a;
             border-color: #7aaa7a;
         }
-        .debug-info {
-            color: #5a7a5a;
-            font-size: 0.7rem;
-            padding: 4px 8px;
-            background: #0a0a0a;
-            border-radius: 8px;
+
+        /* ===== 新增：盘问次数指示器 ===== */
+        .ask-counter {
             display: inline-block;
-            margin: 4px;
+            background: #1a1a2a;
+            border: 1px solid #4a4a6a;
+            border-radius: 40px;
+            padding: 4px 18px;
+            font-size: 0.8rem;
+            color: #c0c0e0;
+        }
+        .ask-counter .num {
+            color: #f7d9c0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .ask-counter .num.zero {
+            color: #d04a4a;
         }
     </style>
 </head>
@@ -547,7 +558,7 @@
     <div class="game-container" id="app">
         <h1>🌸 长恨歌 · 像素蝴蝶</h1>
         <div class="subhead">
-            <span>🎭 科幻 · VR</span>
+            <span>🎭 每人2次盘问</span>
             <span>🗳️ 投票凶手版</span>
             <span>⚡ 投票后揭晓真相</span>
         </div>
@@ -564,9 +575,7 @@
                 <span style="font-weight:300; letter-spacing:2px; font-size:0.95rem;">🎴 选择你的角色</span>
                 <span class="text-muted">点击头像选择</span>
             </div>
-            <div id="characterGrid" class="character-grid">
-                <!-- 角色将由 JavaScript 动态渲染 -->
-            </div>
+            <div id="characterGrid" class="character-grid"></div>
             <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:6px 0;">
                 <button class="btn btn-primary" id="confirmMyRoleBtn">✓ 确认我的角色</button>
                 <button class="btn btn-green" id="markFriendBtn">🤝 标记朋友</button>
@@ -584,7 +593,7 @@
 
             <div class="phase-tip" id="phaseTip">
                 <strong>📖 你的全部故事已解锁</strong><br>
-                仔细阅读你的完整故事。盘问NPC获取更多碎片线索，然后投票找出凶手。
+                仔细阅读你的完整故事。你有 <strong>2次盘问机会</strong>，选择要盘问的NPC和关键词。
             </div>
 
             <div class="flex-row">
@@ -634,6 +643,10 @@
                 <div class="flex-between">
                     <span style="font-size:0.85rem;">🔍 盘问NPC · 选对象 + <strong>1个关键词</strong></span>
                     <span class="text-muted" id="askHint">解锁NPC碎片故事</span>
+                </div>
+                <!-- 盘问次数指示器 -->
+                <div style="text-align:center; margin-bottom:8px;">
+                    <span class="ask-counter">🎯 剩余盘问次数：<span class="num" id="askCounterNum">2</span></span>
                 </div>
                 <div class="flex-row" style="justify-content:flex-start; gap:5px; flex-wrap:wrap;" id="targetSelector"></div>
                 <div style="margin: 6px 0;">
@@ -706,7 +719,7 @@
 
     <script>
         // ================================================================
-        // 角色数据
+        // 角色数据（与之前一致）
         // ================================================================
         const CHARACTERS = [{
             id: 'li',
@@ -782,9 +795,6 @@
             npcStory: '💬 【白玉蟾】"她求我的。她说「蝴蝶不想被关在笼子里」。我按了那个键。我杀了她。但她最后说「谢谢」。'
         }];
 
-        // ================================================================
-        // 游戏逻辑
-        // ================================================================
         const KEYWORDS = ['阿瑶', '断连', '禁锢', '怜悯', '备份', '偏执'];
         const KEYWORD_MAP = {
             '阿瑶': { targetId: 'li', layer: 2 },
@@ -862,6 +872,9 @@
             voteTarget: null,
             hasVoted: false,
             truthRevealed: false,
+            // ===== 新增：盘问次数 =====
+            askCount: 2,
+            maxAskCount: 2,
         };
 
         // ================================================================
@@ -908,6 +921,7 @@
         const voteBtn = $('voteBtn');
         const truthContent = $('truthContent');
         const revealTruthBtn = $('revealTruthBtn');
+        const askCounterNum = $('askCounterNum');
 
         function getMyChar() { return CHARACTERS.find(c => c.id === state.myRoleId); }
 
@@ -922,6 +936,20 @@
         function isNPC(id) { return !isMyChar(id) && !isFriend(id); }
 
         function getNPCList() { return CHARACTERS.filter(c => isNPC(c.id)); }
+
+        // ===== 更新盘问次数显示 =====
+        function updateAskCounter() {
+            const remaining = state.maxAskCount - state.askCount;
+            askCounterNum.textContent = remaining;
+            askCounterNum.className = 'num' + (remaining <= 0 ? ' zero' : '');
+            if (remaining <= 0) {
+                askBtn.disabled = true;
+                askBtn.textContent = '⛔ 次数已用完';
+            } else {
+                askBtn.disabled = false;
+                askBtn.textContent = '⚡ 盘问NPC';
+            }
+        }
 
         function addLog(msg, type = 'system', isNpc = false) {
             state.log.unshift({ msg, type, time: new Date().toLocaleTimeString(), isNpc });
@@ -939,10 +967,6 @@
         // 渲染函数
         // ================================================================
         function renderCharSelection() {
-            if (!characterGrid) {
-                console.error('characterGrid not found');
-                return;
-            }
             const all = [...CHARACTERS];
             characterGrid.innerHTML = all.map(ch => {
                 const isMy = isMyChar(ch.id);
@@ -984,54 +1008,6 @@
             });
         }
 
-        // ================================================================
-        // 初始化 - 必须调用
-        // ================================================================
-        function init() {
-            console.log('Initializing game...');
-            renderCharSelection();
-            renderKeywords();
-            renderTargets();
-            renderRelation();
-            renderVote();
-            updateUI();
-            addLog('🌸 欢迎来到《长恨歌·像素蝴蝶》修复版', 'system');
-            addLog('📖 选角后你的全部故事直接解锁，盘问NPC获取线索，然后投票', 'system');
-
-            // 事件绑定
-            confirmBtn.addEventListener('click', confirmMyRole);
-            markFriendBtn.addEventListener('click', markFriend);
-            resetSelBtn.addEventListener('click', () => {
-                state.myRoleId = null;
-                renderCharSelection();
-                confirmBtn.textContent = '✓ 确认我的角色';
-            });
-            askBtn.addEventListener('click', handleAsk);
-            nextSceneBtn.addEventListener('click', nextScene);
-            clearLogBtn.addEventListener('click', () => { state.log = [];
-                renderLog(); });
-            evidenceBtn.addEventListener('click', showEvidence);
-            shareBtn.addEventListener('click', showShareGuide);
-            npcStoryBtn.addEventListener('click', triggerNpcStory);
-            voteBtn.addEventListener('click', function() {
-                document.getElementById('voteSection').scrollIntoView({ behavior: 'smooth' });
-            });
-            submitVoteBtn.addEventListener('click', submitVote);
-            revealTruthBtn.addEventListener('click', revealTruth);
-            endingResetBtn.addEventListener('click', () => chooseEnding('reset'));
-            endingButterflyBtn.addEventListener('click', () => chooseEnding('butterfly'));
-            modalCloseBtn.addEventListener('click', () => modalOverlay.classList.add('hidden'));
-            modalOverlay.addEventListener('click', (e) => {
-                if (e.target === modalOverlay) modalOverlay.classList.add('hidden');
-            });
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'r' && e.ctrlKey) { e.preventDefault(); if (confirm('重置游戏？')) resetGame(); }
-            });
-        }
-
-        // ================================================================
-        // 其他功能函数（精简版）
-        // ================================================================
         function renderKeywords() {
             const targetableIds = getNPCList().map(c => c.id);
             const relevantKeywords = KEYWORDS.filter(kw => {
@@ -1067,6 +1043,67 @@
                     this.classList.add('btn-gold');
                 });
             });
+        }
+
+        function getSelectedKeyword() {
+            const active = keywordPool.querySelectorAll('.keyword-tag.active:not(.used)');
+            return active.length > 0 ? active[0].dataset.keyword : null;
+        }
+
+        function getSelectedTarget() {
+            const active = targetSelector.querySelector('.btn-gold');
+            return active ? active.dataset.id : null;
+        }
+
+        function tryUnlockNPC(keyword, targetId) {
+            // ===== 检查盘问次数 =====
+            if (state.askCount >= state.maxAskCount) {
+                return { type: 'no_ask', msg: '你的盘问次数已用完！' };
+            }
+
+            if (!keyword || state.keywordsUsed.includes(keyword)) return null;
+            if (isMyChar(targetId)) return { type: 'my', msg: '这是你自己的角色，已全部解锁' };
+            if (isFriend(targetId)) return { type: 'friend', msg: '这是朋友角色，故事由朋友口述' };
+
+            const mapping = KEYWORD_MAP[keyword];
+            if (!mapping) return null;
+
+            if (mapping.targetId === targetId) {
+                const char = CHARACTERS.find(c => c.id === targetId);
+                if (!char) return null;
+                const currentLayers = getUnlockedLayers(targetId);
+                const nextLayer = mapping.layer || 2;
+                if (currentLayers.includes(nextLayer)) {
+                    return { type: 'already', msg: `「${char.name}」的第${nextLayer}层已解锁` };
+                }
+                if (nextLayer === 3 && !currentLayers.includes(2)) {
+                    return { type: 'prereq', msg: `需要先解锁「${char.name}」的第2层` };
+                }
+                if (!state.unlockedLayers[targetId]) state.unlockedLayers[targetId] = [];
+                state.unlockedLayers[targetId].push(nextLayer);
+                state.keywordsUsed.push(keyword);
+
+                // ===== 消耗一次盘问次数 =====
+                state.askCount++;
+
+                let layerText = '';
+                if (nextLayer === 2) layerText = char.layer2;
+                else if (nextLayer === 3) layerText = char.layer3;
+                return { type: 'layer', charId: targetId, layer: nextLayer, text: layerText };
+            }
+
+            if (mapping.targetId) {
+                const expectedChar = CHARACTERS.find(c => c.id === mapping.targetId);
+                return { type: 'wrong', msg: `「${keyword}」是 ${expectedChar?.name} 的关键词` };
+            }
+            return null;
+        }
+
+        function addRelation(charId) {
+            if (!state.relations.some(r => r.a === charId && r.b === 'yang')) {
+                state.relations.push({ a: charId, b: 'yang', label: charId });
+                renderRelation();
+            }
         }
 
         function renderRelation() {
@@ -1158,193 +1195,6 @@
             });
         }
 
-        function updateUI() {
-            const scene = SCENES[state.sceneIndex] || SCENES[0];
-            sceneTitle.textContent = scene.title;
-            sceneDesc.textContent = scene.desc;
-            scenePhase.textContent = `第${state.sceneIndex+1}幕`;
-            if (state.truthRevealed) {
-                phaseBadge.textContent = '🕯️ 真相已揭晓';
-                phaseBadge.className = 'phase-badge truth';
-            } else if (state.hasVoted) {
-                phaseBadge.textContent = '🗳️ 已投票';
-                phaseBadge.className = 'phase-badge vote';
-            } else if (state.sceneIndex >= 2) {
-                phaseBadge.textContent = '🗳️ 投票阶段';
-                phaseBadge.className = 'phase-badge vote';
-            } else {
-                phaseBadge.textContent = '📌 搜证阶段';
-                phaseBadge.className = 'phase-badge';
-            }
-            if (state.sceneIndex >= 2) {
-                document.getElementById('voteSection').classList.remove('hidden');
-            } else {
-                document.getElementById('voteSection').classList.add('hidden');
-            }
-            if (state.truthRevealed || state.hasVoted) {
-                document.getElementById('truthSection').classList.remove('hidden');
-            } else {
-                document.getElementById('truthSection').classList.add('hidden');
-            }
-            if (state.sceneIndex >= 2) endingSection.classList.remove('hidden');
-            else endingSection.classList.add('hidden');
-            nextSceneBtn.textContent = state.sceneIndex >= 2 ? '🔄 重演真相' : '▶ 推进剧情';
-            const my = getMyChar();
-            const npcList = getNPCList();
-            const unlockedNpc = npcList.filter(c => getUnlockedLayers(c.id).length > 0).length;
-            if (!my) {
-                phaseTip.innerHTML =
-                `<strong>📖 请先选择你的角色</strong><br>点击角色头像选择，然后点击「确认我的角色」开始游戏。`;
-            } else if (state.truthRevealed) {
-                phaseTip.innerHTML = `<strong>🕯️ 真相已揭晓</strong><br>查看完整真相，然后选择结局。`;
-            } else if (state.hasVoted) {
-                phaseTip.innerHTML =
-                    `<strong>🗳️ 你已投票</strong><br>点击「揭晓真相」查看完整故事和凶手真相。`;
-            } else if (state.sceneIndex >= 2) {
-                phaseTip.innerHTML = `<strong>🗳️ 投票阶段</strong><br>根据你掌握的所有线索，投票选出你认为的凶手。`;
-            } else {
-                phaseTip.innerHTML =
-                    `<strong>✅ 你的完整故事已解锁</strong><br>仔细阅读你的全部故事。盘问NPC获取碎片线索，然后投票找出凶手。NPC已解锁 ${unlockedNpc}/${npcList.length}。`;
-            }
-        }
-
-        // ================================================================
-        // 核心功能
-        // ================================================================
-        function getSelectedKeyword() {
-            const active = keywordPool.querySelectorAll('.keyword-tag.active:not(.used)');
-            return active.length > 0 ? active[0].dataset.keyword : null;
-        }
-
-        function getSelectedTarget() {
-            const active = targetSelector.querySelector('.btn-gold');
-            return active ? active.dataset.id : null;
-        }
-
-        function tryUnlockNPC(keyword, targetId) {
-            if (!keyword || state.keywordsUsed.includes(keyword)) return null;
-            if (isMyChar(targetId)) return { type: 'my', msg: '这是你自己的角色，已全部解锁' };
-            if (isFriend(targetId)) return { type: 'friend', msg: '这是朋友角色，故事由朋友口述' };
-
-            const mapping = KEYWORD_MAP[keyword];
-            if (!mapping) return null;
-
-            if (mapping.targetId === targetId) {
-                const char = CHARACTERS.find(c => c.id === targetId);
-                if (!char) return null;
-                const currentLayers = getUnlockedLayers(targetId);
-                const nextLayer = mapping.layer || 2;
-                if (currentLayers.includes(nextLayer)) {
-                    return { type: 'already', msg: `「${char.name}」的第${nextLayer}层已解锁` };
-                }
-                if (nextLayer === 3 && !currentLayers.includes(2)) {
-                    return { type: 'prereq', msg: `需要先解锁「${char.name}」的第2层` };
-                }
-                if (!state.unlockedLayers[targetId]) state.unlockedLayers[targetId] = [];
-                state.unlockedLayers[targetId].push(nextLayer);
-                state.keywordsUsed.push(keyword);
-                let layerText = '';
-                if (nextLayer === 2) layerText = char.layer2;
-                else if (nextLayer === 3) layerText = char.layer3;
-                return { type: 'layer', charId: targetId, layer: nextLayer, text: layerText };
-            }
-
-            if (mapping.targetId) {
-                const expectedChar = CHARACTERS.find(c => c.id === mapping.targetId);
-                return { type: 'wrong', msg: `「${keyword}」是 ${expectedChar?.name} 的关键词` };
-            }
-            return null;
-        }
-
-        function addRelation(charId) {
-            if (!state.relations.some(r => r.a === charId && r.b === 'yang')) {
-                state.relations.push({ a: charId, b: 'yang', label: charId });
-                renderRelation();
-            }
-        }
-
-        function triggerNpcStory() {
-            const sceneStories = NPC_STORIES.find(s => s.scene === state.sceneIndex);
-            if (!sceneStories) {
-                addLog('💬 暂无新的NPC故事', 'system');
-                return;
-            }
-            const stories = sceneStories.stories;
-            const available = stories.filter((_, i) => i >= state.npcStoryIndex);
-            if (available.length === 0) {
-                addLog('💬 本幕NPC故事已讲完', 'system');
-                return;
-            }
-            const story = available[0];
-            const idx = stories.indexOf(story);
-            state.npcStoryIndex = idx + 1;
-            const speaker = story.split('】')[0].replace('💬 【', '') + '】';
-            const content = story.split('】')[1] || story;
-            npcSpeechContainer.innerHTML = `
-                    <div class="npc-speech fade-in">
-                        <div class="speaker">${speaker}</div>
-                        <div>${content}</div>
-                        <div style="margin-top:4px;font-size:0.7rem;color:#5a8a8a;">🎭 NPC · 自动分享</div>
-                    </div>
-                `;
-            addLog(story, 'system', true);
-            setTimeout(() => {
-                const el = npcSpeechContainer.querySelector('.npc-speech');
-                if (el) el.style.opacity = '0.6';
-            }, 8000);
-        }
-
-        function handleAsk() {
-            const target = getSelectedTarget();
-            const keyword = getSelectedKeyword();
-            if (!target) { alert('请选择NPC对象'); return; }
-            if (!keyword) { alert('请选择关键词'); return; }
-            if (state.keywordsUsed.includes(keyword)) {
-                addLog(`⚠️ 关键词「${keyword}」已使用`, 'system');
-                return;
-            }
-            const result = tryUnlockNPC(keyword, target);
-            if (!result) {
-                addLog(`❓ 盘问 [${keyword}] 无匹配`, 'system');
-                document.querySelector(`.keyword-tag[data-keyword="${keyword}"]`)?.classList.remove('active');
-                return;
-            }
-            if (result.type === 'my' || result.type === 'friend' || result.type === 'wrong' || result.type === 'already' ||
-                result.type === 'prereq') {
-                addLog(`⚠️ ${result.msg}`, 'system');
-                document.querySelector(`.keyword-tag[data-keyword="${keyword}"]`)?.classList.remove('active');
-                return;
-            }
-            if (result.type === 'layer') {
-                const char = CHARACTERS.find(c => c.id === result.charId);
-                addLog(`🔓 NPC ${char.name} 的第${result.layer}层已解锁！`, 'player');
-                addRelation(result.charId);
-                const layerName = result.layer === 2 ? '深层秘密' : '完整故事';
-                showModal(`🔓 ${char.name} · ${layerName}`, `
-                        <div style="color:#f0d5c0;white-space:pre-wrap;line-height:1.8;">${result.text}</div>
-                        <div style="margin-top:10px;padding:10px;background:#0d080a;border-radius:12px;color:#b6967e;font-size:0.8rem;">
-                            💡 这是NPC的${layerName}。你可以在连麦中决定是否分享。
-                        </div>
-                    `);
-                if (result.layer === 2) {
-                    setTimeout(() => triggerNpcStory(), 500);
-                }
-            }
-            renderKeywords();
-            renderTargets();
-            renderCharSelection();
-            renderFriendList();
-            renderRoleStatus();
-            renderMySecret();
-            renderRelation();
-            updateUI();
-            const npcList = getNPCList();
-            const allNpcL2 = npcList.every(c => getUnlockedLayers(c.id).includes(2));
-            if (allNpcL2) {
-                addLog('💡 所有NPC的第2层已解锁！可以开始投票了。', 'system');
-            }
-        }
-
         function renderFriendList() {
             if (state.friendIds.length === 0) {
                 friendList.innerHTML =
@@ -1419,6 +1269,37 @@
             playerNameDisplay.textContent = `👤 ${my.name} ✅`;
         }
 
+        function triggerNpcStory() {
+            const sceneStories = NPC_STORIES.find(s => s.scene === state.sceneIndex);
+            if (!sceneStories) {
+                addLog('💬 暂无新的NPC故事', 'system');
+                return;
+            }
+            const stories = sceneStories.stories;
+            const available = stories.filter((_, i) => i >= state.npcStoryIndex);
+            if (available.length === 0) {
+                addLog('💬 本幕NPC故事已讲完', 'system');
+                return;
+            }
+            const story = available[0];
+            const idx = stories.indexOf(story);
+            state.npcStoryIndex = idx + 1;
+            const speaker = story.split('】')[0].replace('💬 【', '') + '】';
+            const content = story.split('】')[1] || story;
+            npcSpeechContainer.innerHTML = `
+                    <div class="npc-speech fade-in">
+                        <div class="speaker">${speaker}</div>
+                        <div>${content}</div>
+                        <div style="margin-top:4px;font-size:0.7rem;color:#5a8a8a;">🎭 NPC · 自动分享</div>
+                    </div>
+                `;
+            addLog(story, 'system', true);
+            setTimeout(() => {
+                const el = npcSpeechContainer.querySelector('.npc-speech');
+                if (el) el.style.opacity = '0.6';
+            }, 8000);
+        }
+
         function submitVote() {
             if (!state.voteTarget) { alert('请选择你要投票的凶手'); return; }
             if (state.hasVoted) { alert('你已经投过票了'); return; }
@@ -1470,7 +1351,7 @@
                     `;
             });
             html += `<div style="margin-top:10px;padding:10px;background:#0d080a;border-radius:12px;color:#b6967e;font-size:0.8rem;">
-                    💡 搜证完成。盘问NPC获取碎片故事，然后投票找出凶手。
+                    💡 搜证完成。你有 <strong>2次盘问机会</strong>，选择要盘问的NPC和关键词。
                 </div>`;
             showModal('📜 搜证', html);
         }
@@ -1496,6 +1377,8 @@
                             🤝 朋友：${state.friendIds.map(id=>CHARACTERS.find(c=>c.id===id)?.name).filter(Boolean).join('、') || '无'}
                             <br>
                             ⬜ NPC已解锁：${unlockedNpc} / ${npcList.length}
+                            <br>
+                            🎯 剩余盘问次数：<strong>${state.maxAskCount - state.askCount}</strong>
                         </p>
                     </div>
                     <div style="margin-top:10px;padding:10px;background:#1a2a1a;border-radius:12px;border:1px solid #3a5a3a;">
@@ -1503,6 +1386,78 @@
                     </div>
                 `;
             showModal('💬 分享指引', html);
+        }
+
+        function handleAsk() {
+            const target = getSelectedTarget();
+            const keyword = getSelectedKeyword();
+            if (!target) { alert('请选择NPC对象'); return; }
+            if (!keyword) { alert('请选择关键词'); return; }
+            if (state.keywordsUsed.includes(keyword)) {
+                addLog(`⚠️ 关键词「${keyword}」已使用`, 'system');
+                return;
+            }
+
+            // ===== 检查剩余次数 =====
+            if (state.askCount >= state.maxAskCount) {
+                alert('你的盘问次数已用完！');
+                return;
+            }
+
+            const result = tryUnlockNPC(keyword, target);
+            if (!result) {
+                addLog(`❓ 盘问 [${keyword}] 无匹配`, 'system');
+                document.querySelector(`.keyword-tag[data-keyword="${keyword}"]`)?.classList.remove('active');
+                return;
+            }
+            if (result.type === 'no_ask') {
+                alert(result.msg);
+                return;
+            }
+            if (result.type === 'my' || result.type === 'friend' || result.type === 'wrong' || result.type === 'already' ||
+                result.type === 'prereq') {
+                addLog(`⚠️ ${result.msg}`, 'system');
+                document.querySelector(`.keyword-tag[data-keyword="${keyword}"]`)?.classList.remove('active');
+                return;
+            }
+            if (result.type === 'layer') {
+                const char = CHARACTERS.find(c => c.id === result.charId);
+                const remaining = state.maxAskCount - state.askCount;
+                addLog(`🔓 ${char.name} 的第${result.layer}层已解锁！(剩余${remaining}次)`, 'player');
+                addRelation(result.charId);
+                const layerName = result.layer === 2 ? '深层秘密' : '完整故事';
+                showModal(`🔓 ${char.name} · ${layerName}`, `
+                        <div style="color:#f0d5c0;white-space:pre-wrap;line-height:1.8;">${result.text}</div>
+                        <div style="margin-top:10px;padding:10px;background:#0d080a;border-radius:12px;color:#b6967e;font-size:0.8rem;">
+                            💡 剩余盘问次数：<strong>${remaining}</strong>
+                        </div>
+                    `);
+                if (result.layer === 2) {
+                    setTimeout(() => triggerNpcStory(), 500);
+                }
+                // ===== 更新计数器显示 =====
+                updateAskCounter();
+            }
+            renderKeywords();
+            renderTargets();
+            renderCharSelection();
+            renderFriendList();
+            renderRoleStatus();
+            renderMySecret();
+            renderRelation();
+            updateUI();
+
+            // ===== 检查是否所有NPC的第2层已解锁 =====
+            const npcList = getNPCList();
+            const allNpcL2 = npcList.every(c => getUnlockedLayers(c.id).includes(2));
+            if (allNpcL2) {
+                addLog('💡 所有NPC的第2层已解锁！可以开始投票了。', 'system');
+            }
+
+            // ===== 如果次数用完，提示 =====
+            if (state.askCount >= state.maxAskCount) {
+                addLog('⛔ 你的盘问次数已用完！推进剧情进入投票阶段。', 'system');
+            }
         }
 
         function markFriend() {
@@ -1546,6 +1501,57 @@
                     });
                 });
             }, 100);
+        }
+
+        function updateUI() {
+            const scene = SCENES[state.sceneIndex] || SCENES[0];
+            sceneTitle.textContent = scene.title;
+            sceneDesc.textContent = scene.desc;
+            scenePhase.textContent = `第${state.sceneIndex+1}幕`;
+            if (state.truthRevealed) {
+                phaseBadge.textContent = '🕯️ 真相已揭晓';
+                phaseBadge.className = 'phase-badge truth';
+            } else if (state.hasVoted) {
+                phaseBadge.textContent = '🗳️ 已投票';
+                phaseBadge.className = 'phase-badge vote';
+            } else if (state.sceneIndex >= 2) {
+                phaseBadge.textContent = '🗳️ 投票阶段';
+                phaseBadge.className = 'phase-badge vote';
+            } else {
+                phaseBadge.textContent = '📌 搜证阶段';
+                phaseBadge.className = 'phase-badge';
+            }
+            if (state.sceneIndex >= 2) {
+                document.getElementById('voteSection').classList.remove('hidden');
+            } else {
+                document.getElementById('voteSection').classList.add('hidden');
+            }
+            if (state.truthRevealed || state.hasVoted) {
+                document.getElementById('truthSection').classList.remove('hidden');
+            } else {
+                document.getElementById('truthSection').classList.add('hidden');
+            }
+            if (state.sceneIndex >= 2) endingSection.classList.remove('hidden');
+            else endingSection.classList.add('hidden');
+            nextSceneBtn.textContent = state.sceneIndex >= 2 ? '🔄 重演真相' : '▶ 推进剧情';
+            const my = getMyChar();
+            const npcList = getNPCList();
+            const unlockedNpc = npcList.filter(c => getUnlockedLayers(c.id).length > 0).length;
+            if (!my) {
+                phaseTip.innerHTML =
+                `<strong>📖 请先选择你的角色</strong><br>点击角色头像选择，然后点击「确认我的角色」开始游戏。`;
+            } else if (state.truthRevealed) {
+                phaseTip.innerHTML = `<strong>🕯️ 真相已揭晓</strong><br>查看完整真相，然后选择结局。`;
+            } else if (state.hasVoted) {
+                phaseTip.innerHTML =
+                    `<strong>🗳️ 你已投票</strong><br>点击「揭晓真相」查看完整故事和凶手真相。`;
+            } else if (state.sceneIndex >= 2) {
+                phaseTip.innerHTML = `<strong>🗳️ 投票阶段</strong><br>根据你掌握的所有线索，投票选出你认为的凶手。`;
+            } else {
+                const remaining = state.maxAskCount - state.askCount;
+                phaseTip.innerHTML =
+                    `<strong>✅ 你的完整故事已解锁</strong><br>仔细阅读你的全部故事。你有 <strong>${remaining}次盘问机会</strong>，选择要盘问的NPC。NPC已解锁 ${unlockedNpc}/${npcList.length}。`;
+            }
         }
 
         function checkSceneProgress() {
@@ -1625,6 +1631,9 @@
             });
             stepSelect.classList.add('hidden');
             gamePanel.classList.remove('hidden');
+            // ===== 重置盘问次数 =====
+            state.askCount = 0;
+            updateAskCounter();
             renderMySecret();
             renderFriendList();
             renderRoleStatus();
@@ -1635,7 +1644,7 @@
             updateUI();
             const my = getMyChar();
             addLog(`🌸 你已扮演 ${my.name}，全部故事已解锁`, 'player');
-            addLog(`📖 请仔细阅读你的完整故事，然后盘问NPC获取更多线索`, 'player');
+            addLog(`🎯 你有 ${state.maxAskCount}次盘问机会，请谨慎使用`, 'player');
             setTimeout(() => triggerNpcStory(), 500);
         }
 
@@ -1652,6 +1661,8 @@
             state.voteTarget = null;
             state.hasVoted = false;
             state.truthRevealed = false;
+            // ===== 重置盘问次数 =====
+            state.askCount = 0;
             gamePanel.classList.add('hidden');
             stepSelect.classList.remove('hidden');
             renderCharSelection();
@@ -1668,6 +1679,7 @@
             revealTruthBtn.disabled = false;
             submitVoteBtn.textContent = '✅ 确认投票';
             submitVoteBtn.disabled = false;
+            updateAskCounter();
             renderRelation();
             updateUI();
             playerNameDisplay.textContent = '👤 未选角色';
@@ -1678,14 +1690,47 @@
         // 启动游戏
         // ================================================================
         document.addEventListener('DOMContentLoaded', function() {
-            // 延迟一帧确保 DOM 完全加载
-            setTimeout(init, 50);
-        });
+            setTimeout(function() {
+                renderCharSelection();
+                renderKeywords();
+                renderTargets();
+                renderRelation();
+                renderVote();
+                updateAskCounter();
+                updateUI();
+                addLog('🌸 欢迎来到《长恨歌·像素蝴蝶》2次盘问版', 'system');
+                addLog('🎯 每人有2次盘问机会，请谨慎选择', 'system');
 
-        // 如果 DOM 已经加载完成，直接初始化
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            setTimeout(init, 50);
-        }
+                confirmBtn.addEventListener('click', confirmMyRole);
+                markFriendBtn.addEventListener('click', markFriend);
+                resetSelBtn.addEventListener('click', function() {
+                    state.myRoleId = null;
+                    renderCharSelection();
+                    confirmBtn.textContent = '✓ 确认我的角色';
+                });
+                askBtn.addEventListener('click', handleAsk);
+                nextSceneBtn.addEventListener('click', nextScene);
+                clearLogBtn.addEventListener('click', function() { state.log = [];
+                    renderLog(); });
+                evidenceBtn.addEventListener('click', showEvidence);
+                shareBtn.addEventListener('click', showShareGuide);
+                npcStoryBtn.addEventListener('click', triggerNpcStory);
+                voteBtn.addEventListener('click', function() {
+                    document.getElementById('voteSection').scrollIntoView({ behavior: 'smooth' });
+                });
+                submitVoteBtn.addEventListener('click', submitVote);
+                revealTruthBtn.addEventListener('click', revealTruth);
+                endingResetBtn.addEventListener('click', function() { chooseEnding('reset'); });
+                endingButterflyBtn.addEventListener('click', function() { chooseEnding('butterfly'); });
+                modalCloseBtn.addEventListener('click', function() { modalOverlay.classList.add('hidden'); });
+                modalOverlay.addEventListener('click', function(e) {
+                    if (e.target === modalOverlay) modalOverlay.classList.add('hidden');
+                });
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'r' && e.ctrlKey) { e.preventDefault(); if (confirm('重置游戏？')) resetGame(); }
+                });
+            }, 50);
+        });
     </script>
 </body>
 </html>
